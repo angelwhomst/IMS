@@ -1,0 +1,71 @@
+/* OrderAndRequest.css */
+
+/* Navigation Bar */
+.nav-bar {
+  background-color: #f7f6fb; /* Light background for the navbar */
+  padding: 15px 0; /* Adds top and bottom padding */
+  display: flex;
+  justify-content: center; /* Center the navigation bar */
+  align-items: center; /* Vertically center the items */
+  border-bottom: 1px solid #ddd; /* Subtle border for separation */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for the navbar */
+}
+
+.nav-options {
+  list-style: none;
+  display: flex;
+  gap: 30px; /* Increase space between navigation items */
+  padding: 0;
+  margin: 0;
+}
+
+.nav-options li {
+  cursor: pointer;
+  padding: 10px 20px; /* Adjust padding for better spacing */
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transitions */
+  font-weight: 500; /* Slightly bolder font for readability */
+}
+
+/* Hover effect */
+.nav-options li:hover {
+  background-color: #e0e0e0;
+  color: #333; /* Darken text on hover for better contrast */
+}
+
+/* Active State */
+.nav-options li.active {
+  background-color: #fe3835; /* Active state background color */
+  color: white; /* Change text color to white for contrast */
+}
+
+/* Dynamic Content area */
+.content {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px; /* Slightly rounded corners for better aesthetics */
+  background-color: #fafafa;
+  max-width: 900px; /* Slightly wider content area */
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+  transition: box-shadow 0.3s ease; /* Smooth shadow transition */
+}
+
+.content:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Darker shadow on hover */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .nav-options {
+      flex-direction: column; /* Stack navigation items vertically */
+      gap: 15px; /* Less space between items on mobile */
+  }
+
+  .content {
+      width: 90%; /* Ensure content area doesn't stretch too much */
+      padding: 15px; /* Slightly less padding on mobile */
+  }
+}

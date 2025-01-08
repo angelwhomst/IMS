@@ -1,0 +1,108 @@
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure the modal is on top */
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: white;
+  padding: 30px; /* Increased padding for better spacing */
+  border-radius: 10px;
+  width: 90%; /* Increased width to make it wider */
+  max-width: 1200px; /* Larger maximum width */
+  min-width: 500px; /* Minimum width to ensure it's not too small */
+  max-height: 80vh; /* Prevent it from getting too large vertically */
+  overflow-y: auto; /* Allows scrolling if content exceeds the max height */
+  position: relative;
+  box-sizing: border-box; /* Ensure padding is included in width */
+}
+
+/* Title Styling */
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Close button (X) */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Form Group Styling */
+.form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  width: 30%; /* Label takes 30% of the row width */
+  text-align: left;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+/* Image Upload Container */
+.image-upload {
+  display: flex;
+  flex-direction: column;
+}
+
+.image-placeholder {
+  width: 100px;
+  height: 100px;
+  border: 1px dashed #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+  overflow: hidden;
+}
+
+.image-placeholder img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Submit Button (Add Product) */
+button.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #fe3835 !important;
+  color: white !important;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+button.submit-btn:hover {
+  background-color: #d32f2f !important;
+}

@@ -1,0 +1,328 @@
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Darker overlay for better focus */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 15px;
+  width: 90%; /* Increased width */
+  max-width: 1000px; /* Optional: increase the max-width for larger modals */
+  min-width: 500px; /* Optional: increase the minimum width for better responsiveness */
+  max-height: 80vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  position: relative;
+  transition: transform 0.3s ease-in-out;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Soft shadow for depth */
+}
+
+
+/* Title Styling */
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.6rem;
+  color: #333;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Close Button */
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #fe3835; /* Red for close button on hover */
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px; /* Increased space between form groups */
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-right: 20px;
+  color: #555;
+  text-align: left;
+  width: 140px; /* Increased width for better alignment */
+  font-size: 1.1rem; /* Slightly larger label font */
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  outline: none;
+  flex-grow: 1;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #fe3835;
+  box-shadow: 0 0 6px rgba(254, 56, 53, 0.6);
+}
+
+/* Image Upload Section */
+.image-upload {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px; /* Added gap between items */
+}
+
+.image-placeholder {
+  width: 48%;
+  height: 200px;
+  border: 2px dashed #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  background-color: #fafafa; /* Light background for placeholder */
+}
+
+.image-placeholder img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.image-placeholder p {
+  color: #aaa;
+  font-size: 1rem;
+}
+
+/* Add Size Section */
+.size-input {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  justify-content: flex-end;
+  width: 60%;
+}
+
+.size-input input {
+  flex-grow: 1;
+  max-width: 280px;
+  padding: 12px;
+  font-size: 1.1rem;
+}
+
+/* Add Size Button */
+.add-size-btn {
+  background-color: #fe3835 !important;  /* Ensure the red color is applied */
+  color: white !important;  /* Force white text */
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  margin-top: -20px; /* Adjust the top margin to move it upward */
+}
+
+.add-size-btn:hover {
+  background-color: #e00a30 !important;  /* Darker red on hover */
+  transform: translateY(-2px); /* Lifting effect */
+}
+
+.add-size-btn:active {
+  transform: translateY(1px); /* Pressed effect */
+}
+
+
+
+/* Size Container */
+.size-container {
+  margin-top: 25px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-left: 6px solid #fe3835;
+}
+
+.size-btn {
+  background-color: #fe3835;
+  color: white;
+  padding: 18px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.size-btn:hover {
+  background-color: #f40b37;
+}
+
+/* Submit Button */
+.submit-btn {
+  background-color: #fe3835;
+  color: white;
+  padding: 14px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #f40b37;
+}
+
+/* Error Modal */
+.error-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
+}
+
+.error-modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.error-modal-content h2 {
+  color: #f40b37;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.error-modal-content p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.error-modal-content .submit-btn {
+  background-color: #f40b37;
+  color: white;
+  border-radius: 8px;
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+}
+
+.error-modal-content .submit-btn:hover {
+  background-color: #d01f2b;
+}
+
+/* Card Styling */
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 25px;
+  padding: 25px;
+  border-left: 6px solid #fe3835;
+}
+
+.card-header {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 25px;
+}
+
+.card-footer .size-btn {
+  background-color: #fe3835;
+  color: white;
+  padding: 20px 25px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.card-footer .size-btn:hover {
+  background-color: #f40b37;
+}
+
+.card-footer .submit-btn {
+  background-color: #fe3835;
+  color: white;
+  padding: 14px 25px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.card-footer .submit-btn:hover {
+  background-color: #f40b37;
+}
+
+/* Threshold Labels */
+.threshold-label {
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.threshold-value {
+  font-size: 1.1rem;
+  color: #f40b37;
+}

@@ -1,0 +1,153 @@
+/* Products Grid Layout */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Auto-adjust number of columns */
+  gap: 20px;
+  justify-items: center; /* Center items within grid */
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Individual Product Card Styling */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 280px;
+  height: auto; /* Make height auto to fit the content */
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  margin: 0 auto; /* Center the card */
+}
+
+/* Product Card Image */
+.product-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* Product Information Section */
+.product-info {
+  padding: 20px;
+  flex-grow: 1;
+  color: #444;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* Make the description scrollable vertically */
+.product-info p {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.4;
+  margin-bottom: 20px;
+  max-height: 120px; /* Limit height of the description */
+  overflow-y: auto; /* Enable vertical scroll */
+}
+
+/* Product Actions Section (Edit & Delete buttons) */
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: #f8f8f8;
+  border-top: 1px solid #e0e0e0;
+  width: 100%;
+}
+
+.product-actions button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.product-actions button.edit-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.product-actions button.delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+/* Hover Effects */
+.product-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.product-card img:hover {
+  transform: scale(1.1);
+}
+
+/* Modal Action Buttons (Confirm & Cancel) */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.confirm-btn, .cancel-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.confirm-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+/* Modal for Add New Product */
+.add-product-modal {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.5);
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+/* Modal Content */
+.add-product-modal-content {
+background-color: white;
+padding: 30px;  /* You can adjust the padding as needed */
+border-radius: 8px;
+max-width: 800px;  /* Set a wider max-width */
+width: 80%;  /* Use percentage to control the width */
+overflow-y: auto;
+position: relative;
+}
+
+/* Make modal content vertically scrollable */
+.add-product-modal-content {
+max-height: 80vh; /* Limit modal content height */
+overflow-y: scroll; /* Allow vertical scrolling */
+}
+
+/* Heading Styling */
+.add-product-modal-content h3 {
+margin-bottom: 20px;
+text-align: center;
+color: #f40b37;
+}

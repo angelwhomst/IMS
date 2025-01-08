@@ -1,0 +1,19 @@
+.employee-history {
+    padding: 20px;
+  }
+  
+  .employee-history ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .employee-history li {
+    margin-bottom: 10px;
+  }
+  
+  .employee-history span {
+    font-size: 0.9em;
+    color: #888;
+  }
+
+  

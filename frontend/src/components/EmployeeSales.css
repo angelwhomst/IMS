@@ -1,0 +1,23 @@
+.employee-sales {
+    padding: 20px;
+  }
+  
+  .employee-sales table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .employee-sales th, .employee-sales td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .employee-sales th {
+    background-color: #f4f4f4;
+  }
+  
+  .employee-sales tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  

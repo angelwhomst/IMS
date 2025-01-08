@@ -1,0 +1,86 @@
+.add-product-btn {
+    display: inline-block; 
+    margin: 30px 20px 20px auto; 
+    padding: 12px 30px;
+    font-size: 18px;
+    background-color: #fe3835;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.add-product-btn:hover {
+    background-color: #7a061e;
+}
+
+.add-product-container {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 20px;
+}
+/* Product Actions */
+.product-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border-top: 1px solid #ddd;
+  }
+  
+  .product-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .product-actions .edit-btn {
+    background-color: #4caf50; /* Green */
+    color: white;
+  }
+  
+  .product-actions .delete-btn {
+    background-color: #f44336; /* Red */
+    color: white;
+  }
+  
+  /* Delete Confirmation Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+  }
+  
+  .modal-actions button {
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .confirm-btn {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .cancel-btn {
+    background-color: #f44336;
+    color: white;
+  }
+  

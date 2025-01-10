@@ -1,0 +1,117 @@
+/* Overlay styling */
+.EditSize_Modal_Overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  
+  /* Modal content container */
+  .EditSize_Modal_Content {
+    background: white;
+    width: 500px;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+  }
+  
+  /* Close button styling */
+  .EditSize_Close_Btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
+  /* Modal title */
+  .EditSize_Modal_Title {
+    margin-bottom: 20px;
+  }
+  
+  /* Scrollable form container */
+  .EditSize_Form_Scroll_Container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  /* Form group styling */
+  .EditSize_Form_Group {
+    margin-bottom: 15px;
+  }
+  
+  /* Label styling */
+  .EditSize_Form_Label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  /* Input, textarea, and select styling */
+  .EditSize_Input,
+  .EditSize_Textarea,
+  .EditSize_Select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Submit button */
+  .EditSize_Submit_Btn {
+    background-color: #eb9654;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .EditSize_Submit_Btn:hover {
+    background-color: #de7b1e;
+  }
+  
+  /* Image upload section */
+  .EditSize_Image_Upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  /* Placeholder for uploaded image */
+  .EditSize_Image_Placeholder {
+    width: 150px;
+    height: 150px;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f9f9f9;
+  }
+  
+  /* Image inside the placeholder */
+  .EditSize_Image_Placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Text for empty placeholder */
+  .EditSize_Image_Placeholder p {
+    color: #888;
+    font-size: 14px;
+  }
+  

@@ -1,11 +1,11 @@
 /* Modal Overlay */
-.modal-overlay {
+.addproduct-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+  background-color: rgba(0, 0, 0, 0.6); /* Darker overlay for focus */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,96 +13,160 @@
 }
 
 /* Modal Content */
-.modal-content {
-  background-color: white;
-  padding: 30px; /* Increased padding for better spacing */
-  border-radius: 10px;
-  width: 90%; /* Increased width to make it wider */
-  max-width: 1200px; /* Larger maximum width */
-  min-width: 500px; /* Minimum width to ensure it's not too small */
-  max-height: 80vh; /* Prevent it from getting too large vertically */
-  overflow-y: auto; /* Allows scrolling if content exceeds the max height */
+.addproduct-modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1200px;
+  min-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
   position: relative;
-  box-sizing: border-box; /* Ensure padding is included in width */
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 /* Title Styling */
-h2 {
+.addproduct-h2 {
   text-align: center;
   margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+  font-weight: 600;
 }
 
 /* Close button (X) */
-.close-btn {
+.addproduct-close-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15px;
+  right: 15px;
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 24px;
+  color: #333;
   cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.addproduct-close-btn:hover {
+  color: #fe3835; /* Change to red on hover */
 }
 
 /* Form Group Styling */
-.form-group {
+.addproduct-form-group {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px; /* Increased margin for better separation */
 }
 
-.form-group label {
+.addproduct-form-group label {
   width: 30%; /* Label takes 30% of the row width */
   text-align: left;
   font-weight: bold;
-  margin-right: 10px;
+  margin-right: 20px; /* More spacing between label and input */
+  font-size: 16px;
+  color: #555;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
+.addproduct-form-group input,
+.addproduct-form-group textarea,
+.addproduct-form-group select {
   flex: 1;
-  padding: 8px;
+  padding: 12px;
   border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #333;
+  transition: border-color 0.3s ease;
+}
+
+.addproduct-form-group input:focus,
+.addproduct-form-group textarea:focus,
+.addproduct-form-group select:focus {
+  border-color: #fe3835; /* Red border on focus */
+  outline: none;
 }
 
 /* Image Upload Container */
-.image-upload {
+.addproduct-image-upload {
   display: flex;
   flex-direction: column;
 }
 
-.image-placeholder {
-  width: 100px;
-  height: 100px;
-  border: 1px dashed #ccc;
+.addproduct-image-placeholder {
+  width: 120px;
+  height: 120px;
+  border: 2px dashed #ccc;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 5px;
+  margin-top: 10px;
   overflow: hidden;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
 }
 
-.image-placeholder img {
+.addproduct-image-placeholder img {
   max-width: 100%;
   max-height: 100%;
 }
 
-/* Submit Button (Add Product) */
-button.submit-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #fe3835 !important;
-  color: white !important;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 20px;
-  transition: background-color 0.3s ease;
+.addproduct-image-placeholder:hover {
+  border-color: #fe3835; /* Change border color on hover */
 }
 
-button.submit-btn:hover {
-  background-color: #d32f2f !important;
+/* Submit Button (Add Product) */
+button.addproduct-submit-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #fe3835;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 30px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+button.addproduct-submit-btn:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px); /* Lift the button slightly on hover */
+}
+
+button.addproduct-submit-btn:active {
+  background-color: #c62828; /* Darker red when clicked */
+  transform: translateY(0); /* Button returns to normal position */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .addproduct-modal-content {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .addproduct-form-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .addproduct-form-group label {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+
+  .addproduct-form-group input,
+  .addproduct-form-group textarea,
+  .addproduct-form-group select {
+    width: 100%;
+  }
+
+  button.addproduct-submit-btn {
+    padding: 12px;
+  }
 }

@@ -1,61 +1,93 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import eye icons
+import axios from "axios"; // Import axios for API calls
 import "./AdminTool.css"; // Import the updated CSS file
 
 const AdminTool = ({ closeModal }) => {
   const [employees, setEmployees] = useState([]);
-  const [employeeName, setEmployeeName] = useState("");
-  const [employeeRole, setEmployeeRole] = useState("");
+  const [employeeFirstName, setEmployeeFirstName] = useState("");
+  const [employeeLastName, setEmployeeLastName] = useState("");
   const [employeeUsername, setEmployeeUsername] = useState("");
   const [employeePassword, setEmployeePassword] = useState("");
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [authToken, setAuthToken] = useState(localStorage.getItem("authToken")); // Store JWT token
 
-  const handleFormSubmit = (e) => {
+  useEffect(() => {
+    // Fetch employee list when component mounts
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get('/employees/list-employee-accounts', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+      });
+      setEmployees(response.data);
+    } catch (error) {
+      console.error("Error fetching employees:", error.response?.data || error);
+    }
+  };
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (employeeName && employeeRole && employeeUsername && employeePassword) {
+    if (employeeFirstName && employeeLastName && employeeUsername && employeePassword) {
+      const newEmployee = {
+        firstName: employeeFirstName,
+        lastName: employeeLastName,
+        username: employeeUsername,
+        password: employeePassword,
+      };
+      
       if (editingEmployeeId) {
-        setEmployees((prevEmployees) =>
-          prevEmployees.map((emp) =>
-            emp.id === editingEmployeeId
-              ? {
-                  ...emp,
-                  name: employeeName,
-                  role: employeeRole,
-                  username: employeeUsername,
-                  password: employeePassword,
-                }
-              : emp
-          )
-        );
-        setEditingEmployeeId(null); // Reset editing mode
+        await updateEmployee(editingEmployeeId, newEmployee);
       } else {
-        setEmployees([ 
-          ...employees, 
-          { 
-            id: Date.now(), // Unique id 
-            name: employeeName, 
-            role: employeeRole, 
-            username: employeeUsername, 
-            password: employeePassword, 
-          } 
-        ]);
+        await createEmployee(newEmployee);
       }
       // Clear input fields
-      setEmployeeName("");
-      setEmployeeRole("");
+      setEmployeeFirstName("");
+      setEmployeeLastName("");
       setEmployeeUsername("");
       setEmployeePassword("");
+      setEditingEmployeeId(null); // Reset editing mode
+    }
+  };
+
+  const createEmployee = async (newEmployee) => {
+    try {
+      await axios.post('/employees/create', newEmployee, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      });
+      fetchEmployees(); // Re-fetch employee list
+    } catch (error) {
+      console.error("Error creating employee:", error.response?.data || error);
+    }
+  };
+
+  const updateEmployee = async (id, updatedEmployee) => {
+    try {
+      await axios.put(`/employees/update/${id}`, updatedEmployee, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      });
+      fetchEmployees(); // Re-fetch employee list
+    } catch (error) {
+      console.error("Error updating employee:", error.response?.data || error);
     }
   };
 
   const handleEditClick = (id) => {
-    const employeeToEdit = employees.find((emp) => emp.id === id);
+    const employeeToEdit = employees.find((emp) => emp.userID === id);
     if (employeeToEdit) {
-      setEmployeeName(employeeToEdit.name);
-      setEmployeeRole(employeeToEdit.role);
+      setEmployeeFirstName(employeeToEdit.firstName);
+      setEmployeeLastName(employeeToEdit.lastName);
       setEmployeeUsername(employeeToEdit.username);
       setEmployeePassword(employeeToEdit.password);
       setEditingEmployeeId(id); // Set to editing mode
@@ -67,12 +99,27 @@ const AdminTool = ({ closeModal }) => {
     setShowConfirmationModal(true); // Show confirmation modal
   };
 
-  const handleDeleteConfirm = () => {
-    setEmployees((prevEmployees) =>
-      prevEmployees.filter((emp) => emp.id !== employeeToDelete)
-    );
-    setShowConfirmationModal(false);
-    setEmployeeToDelete(null); // Reset the state
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteEmployee(employeeToDelete);
+      setShowConfirmationModal(false);
+      setEmployeeToDelete(null); // Reset the state
+    } catch (error) {
+      console.error("Error deleting employee:", error.response?.data || error);
+    }
+  };
+
+  const deleteEmployee = async (id) => {
+    try {
+      await axios.delete(`/employees/delete/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      });
+      fetchEmployees(); // Re-fetch employee list
+    } catch (error) {
+      console.error("Error deleting employee:", error.response?.data || error);
+    }
   };
 
   const handleDeleteCancel = () => {
@@ -96,15 +143,15 @@ const AdminTool = ({ closeModal }) => {
           <form className="admin-form" onSubmit={handleFormSubmit}>
             <input
               type="text"
-              placeholder="Name"
-              value={employeeName}
-              onChange={(e) => setEmployeeName(e.target.value)}
+              placeholder="First Name"
+              value={employeeFirstName}
+              onChange={(e) => setEmployeeFirstName(e.target.value)}
             />
             <input
               type="text"
-              placeholder="Role"
-              value={employeeRole}
-              onChange={(e) => setEmployeeRole(e.target.value)}
+              placeholder="Last Name"
+              value={employeeLastName}
+              onChange={(e) => setEmployeeLastName(e.target.value)}
             />
             <input
               type="text"
@@ -131,15 +178,19 @@ const AdminTool = ({ closeModal }) => {
             <h3>Employee List</h3>
             <ul className="admin-ul">
               {employees.map((emp) => (
-                <li key={emp.id}>
-                  <span>Name: <strong>{emp.name}</strong></span>
-                  <span className="role">Role: {emp.role}</span>
+                <li key={emp.userID}>
+                  <span>
+                    First Name: <strong>{emp.firstName}</strong>
+                  </span>
+                  <span>
+                    Last Name: <strong>{emp.lastName}</strong>
+                  </span>
                   <span className="username">Username: {emp.username}</span>
                   <div className="buttons">
-                    <button className="delete-btn" onClick={() => handleDeleteClick(emp.id)}>
+                    <button className="delete-btn" onClick={() => handleDeleteClick(emp.userID)}>
                       Delete
                     </button>
-                    <button className="edit-btn" onClick={() => handleEditClick(emp.id)}>
+                    <button className="edit-btn" onClick={() => handleEditClick(emp.userID)}>
                       Edit
                     </button>
                   </div>
@@ -155,16 +206,10 @@ const AdminTool = ({ closeModal }) => {
         <div className="confirmation-modal">
           <div className="confirmation-modal-content">
             <h3>Are you sure you want to delete this employee?</h3>
-            <button
-              className="btn btn-confirm"
-              onClick={handleDeleteConfirm}
-            >
+            <button className="btn btn-confirm" onClick={handleDeleteConfirm}>
               Yes
             </button>
-            <button
-              className="btn btn-cancel"
-              onClick={handleDeleteCancel}
-            >
+            <button className="btn btn-cancel" onClick={handleDeleteCancel}>
               No
             </button>
           </div>

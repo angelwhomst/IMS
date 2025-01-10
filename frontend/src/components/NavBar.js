@@ -162,3 +162,4 @@ const NavBar = ({ onLogout }) => {
 };
 
 export default NavBar;
+ 

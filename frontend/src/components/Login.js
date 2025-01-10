@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { jwtDecode } from 'jwt-decode'; // Correct import for jwt-decode
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 const Login = ({ onLogin, onRoleSelect }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate(); // Use the navigate hook from React Router v6
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,6 +48,8 @@ const Login = ({ onLogin, onRoleSelect }) => {
         } else {
           console.warn('onRoleSelect is not a function or not passed as prop');
         }
+        // Redirect to dashboard after successful login
+        navigate('/dashboard');
       } else {
         alert('Invalid username or password');
       }

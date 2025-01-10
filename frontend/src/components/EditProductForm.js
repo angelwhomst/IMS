@@ -1,253 +1,168 @@
-import React, { useState } from "react";
-import "./EditProductForm.css"; // Import the updated CSS for the EditProductForm modal
+import React, { useState, useEffect } from 'react';
+import './EditProductForm.css';
+import EditSizeModal from './EditSizeModal';
 
-const EditProductForm = ({ isOpen, onClose, onSubmit, product }) => {
-  const [formData, setFormData] = useState({
-    productName: product?.productName || "",
-    description: product?.description || "",
-    price: product?.price || "",
-    category: product?.category || "",
-    supplier: product?.supplier || "",
-    image: product?.image || null,
-  });
+const EditProductForm = ({ onClose }) => {
+  const [product, setProduct] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
 
-  const [sizes, setSizes] = useState(product?.sizes || []);
-  const [newSize, setNewSize] = useState("");
-  const [sizeDetails, setSizeDetails] = useState(product?.sizeDetails || {});
-
-  const [showErrorModal, setShowErrorModal] = useState(false);
-
-  if (!isOpen) return null;
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({ ...prevState, [name]: value }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFormData((prevState) => ({ ...prevState, image: file }));
-  };
-
-  const handleAddSize = () => {
-    if (newSize && !sizes.includes(newSize)) {
-      setSizes([...sizes, newSize]);
-      setSizeDetails({
-        ...sizeDetails,
-        [newSize]: { threshold: "", stockAvailable: "", reorderQuantity: "" },
-      });
-      setNewSize("");
-    }
-  };
-
-  const handleSizeDetailChange = (size, field, value) => {
-    setSizeDetails((prevState) => ({
-      ...prevState,
-      [size]: { ...prevState[size], [field]: value },
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const allFieldsFilled =
-      Object.values(formData).every((value) => value !== "" && value !== null) &&
-      sizes.length > 0;
-
-    if (!allFieldsFilled) {
-      setShowErrorModal(true);
-      return;
-    }
-
-    const formattedPrice = `₱${parseFloat(formData.price).toFixed(2)}`;
-    const updatedFormData = {
-      ...formData,
-      price: formattedPrice,
-      sizes,
-      sizeDetails,
+  useEffect(() => {
+    const fetchProductData = async () => {
+      const productData = {
+        name: 'KIM',
+        description: 'Stylish shoes for all occasions',
+        price: 1000,
+        quantity: 9,
+        threshold: 5, // Added threshold field
+        reorderQuantity: 10, // Added reorderQuantity field
+        sizes: [6, 7, 8, 9, 10], // Ensure sizes are always an array
+        photo: 'https://via.placeholder.com/300x200',
+      };
+      setProduct(productData);
     };
 
-    onSubmit(updatedFormData);
-    onClose();
+    fetchProductData();
+  }, []);
+
+  const handleSizeClick = (size) => {
+    setSelectedSize(size);
   };
 
-  const closeErrorModal = () => setShowErrorModal(false);
+  const handleDeleteSize = () => {
+    if (selectedSize) {
+      const updatedSizes = product.sizes.filter((size) => size !== selectedSize);
+      setProduct((prevProduct) => ({
+        ...prevProduct,
+        sizes: updatedSizes,
+      }));
+      setSelectedSize(null);
+    }
+  };
+
+  const handleEditClick = () => {
+    if (selectedSize) {
+      setIsModalOpen(true); // Open the modal
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false); // Close the modal
+  };
+
+  if (!product) return <p>Loading...</p>;
+
+  const generateTableData = () => {
+    if (!selectedSize) return [];
+    const tableData = [];
+    for (let i = 1; i <= product.quantity; i++) {
+      tableData.push({
+        barcode: `BARCODE-${selectedSize}-${i}`,
+        productCode: `CODE-${selectedSize}-${i}`,
+      });
+    }
+    return tableData;
+  };
+
+  const selectedSizeInfo = selectedSize ? (
+    <div>
+      <p><strong>Selected Size:</strong> {selectedSize}</p>
+      <p><strong>Quantity Available:</strong> {product.quantity}</p>
+    </div>
+  ) : (
+    <p>Select a size to see details</p>
+  );
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="close-btn" onClick={onClose}>
-          X
-        </button>
-        <h2>Edit Product</h2>
-        <form onSubmit={handleSubmit}>
-          {/* Product Image */}
-          <div className="form-group">
-            <label>Product Image</label>
-            <div className="image-upload">
-              <input type="file" accept="image/*" onChange={handleFileChange} />
-              <div className="image-placeholder">
-                {formData.image ? (
-                  <img
-                    src={URL.createObjectURL(formData.image)}
-                    alt="Product"
-                  />
-                ) : (
-                  <p>Upload Image</p>
-                )}
-              </div>
+    <div className="edit-product-form">
+      <button className="close-button" onClick={onClose}>X</button>
+      <div className="scrollable-container">
+        <div className="photo-section">
+          <div className="photo-placeholder">
+            {product.photo ? <img src={product.photo} alt="Product" /> : 'No Photo Available'}
+          </div>
+        </div>
+
+        <div className="details-section">
+          <div className="details">
+            <p><strong>PRODUCT NAME:</strong> {product.name}</p>
+            <p><strong>DESCRIPTION:</strong> {product.description}</p>
+            <p><strong>PRICE:</strong> {product.price}</p>
+            <p><strong>SIZE:</strong></p>
+            <div className="size-options">
+              {/* Check if product.sizes is defined before rendering */}
+              {product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 ? (
+                product.sizes.map((size, index) => (
+                  <button
+                    key={index}
+                    className="size-button"
+                    onClick={() => handleSizeClick(size)}
+                  >
+                    {size}
+                  </button>
+                ))
+              ) : (
+                <p>No sizes available</p>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Other Form Fields */}
-          <div className="form-group">
-            <label>Product Name</label>
-            <input
-              type="text"
-              name="productName"
-              value={formData.productName}
-              onChange={handleChange}
-              placeholder="Enter product name"
-            />
-          </div>
+        <div className="size-info-section">
+          <h3>Size Details</h3>
+          {selectedSizeInfo}
+        </div>
 
-          <div className="form-group">
-            <label>Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Enter product description"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Price (PHP)</label>
-            <input
-              type="number"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              placeholder="Enter price"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Category</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-            >
-              <option value="">Select Category</option>
-              <option value="men">Men's Leather Shoes</option>
-              <option value="women">Women's Leather Shoes</option>
-              <option value="girls">Girls Leather Shoes</option>
-              <option value="boys">Boys Leather Shoes</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Supplier</label>
-            <input
-              type="text"
-              name="supplier"
-              value={formData.supplier}
-              onChange={handleChange}
-              placeholder="Enter supplier name"
-            />
-          </div>
-
-          {/* Size Management */}
-          <div className="form-group">
-            <label>Sizes</label> {/* Updated label text */}
-            <div className="size-input">
-              <input
-                type="text"
-                value={newSize}
-                onChange={(e) => setNewSize(e.target.value)}
-                placeholder="Enter new size"
-              />
-              <button
-                type="button"
-                onClick={handleAddSize}
-                className="add-size-btn"
-              >
-                Add Size
-              </button>
-            </div>
-          </div>
-
-          <div className="sizes">
-            {sizes.map((size) => (
-              <div key={size} className="size-container">
-                <button
-                  type="button"
-                  className="size-btn"
-                  onClick={() =>
-                    setSizeDetails((prev) => ({
-                      ...prev,
-                      [size]: { ...prev[size], expanded: !prev[size]?.expanded },
-                    }))
-                  }
-                >
-                  {size}
-                </button>
-                {sizeDetails[size]?.expanded && (
-                  <div className="size-details">
-                    <div className="form-group">
-                      <label>Threshold</label>
-                      <input
-                        type="number"
-                        value={sizeDetails[size].threshold}
-                        onChange={(e) =>
-                          handleSizeDetailChange(size, "threshold", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Stock Available</label>
-                      <input
-                        type="number"
-                        value={sizeDetails[size].stockAvailable}
-                        onChange={(e) =>
-                          handleSizeDetailChange(size, "stockAvailable", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Re-Order Quantity</label>
-                      <input
-                        type="number"
-                        value={sizeDetails[size].reorderQuantity}
-                        onChange={(e) =>
-                          handleSizeDetailChange(size, "reorderQuantity", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <button type="submit" className="submit-btn">
-            Edit Product
-          </button>
-        </form>
-
-        {showErrorModal && (
-          <div className="error-modal-overlay">
-            <div className="error-modal-content">
-              <h2>Missing Fields</h2>
-              <p>All fields are required. Please fill in all the fields.</p>
-              <button className="submit-btn" onClick={closeErrorModal}>
-                OK
-              </button>
-            </div>
+        {/* Threshold and Reorder Quantity Section (Above Barcode & Product Code) */}
+        {selectedSize && (
+          <div className="quantity-threshold-section">
+            <p><strong>Threshold:</strong> {product.threshold}</p>
+            <p><strong>Reorder Quantity:</strong> {product.reorderQuantity}</p>
           </div>
         )}
+
+        {/* Barcode & Product Code Section */}
+        {selectedSize && (
+          <div className="barcode-table-section">
+            <h3>Barcode & Product Code for Size {selectedSize}</h3>
+            <table className="barcode-table">
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Barcode</th>
+                  <th>Product Code</th>
+                </tr>
+              </thead>
+              <tbody>
+                {generateTableData().map((data, index) => (
+                  <tr key={index}>
+                    <td>{selectedSize}</td>
+                    <td>{data.barcode}</td>
+                    <td>{data.productCode}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="actions-section">
+          <button className="action-button delete-button" onClick={handleDeleteSize}>DELETE</button>
+          <button className="action-button edit-button" onClick={handleEditClick}>EDIT</button>
+        </div>
       </div>
+
+      {isModalOpen && (
+        <EditSizeModal
+          product={product}
+          selectedSize={selectedSize}
+          onClose={handleModalClose}
+          onSave={(updatedProductData) => {
+            setProduct(updatedProductData); // Handle saving changes
+            handleModalClose(); // Close modal after saving
+          }}
+        />
+      )}
     </div>
   );
 };

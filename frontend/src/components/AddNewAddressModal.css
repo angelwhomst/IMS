@@ -1,6 +1,7 @@
 /* AddNewAddressModal.css */
 
-.modal {
+/* Modal background */
+.addnewaddress-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -10,35 +11,42 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
+    overflow-y: auto;
 }
 
-.modal-content {
-    background-color: white; /* Set the background color to white */
+/* Modal content box */
+.addnewaddress-modal-content {
+    background-color: white;
     padding: 20px;
     border-radius: 8px;
     max-width: 500px;
     width: 100%;
     overflow-y: auto;
     position: relative;
+    max-height: 90vh;
+    box-sizing: border-box;
 }
 
-.modal-content h3 {
+/* Modal title */
+.addnewaddress-modal-content h3 {
     margin-bottom: 20px;
     text-align: center;
     color: #f40b37;
 }
 
-.modal-content .form-group {
+/* Form group styles */
+.addnewaddress-form-group {
     margin-bottom: 15px;
 }
 
-.modal-content .form-group label {
+.addnewaddress-form-group label {
     display: block;
     font-weight: bold;
     margin-bottom: 5px;
 }
 
-.modal-content .form-group input {
+.addnewaddress-form-group input {
     width: 100%;
     padding: 10px;
     font-size: 16px;
@@ -46,24 +54,10 @@
     border-radius: 6px;
 }
 
-.modal-content button {
-    background-color: #ffffff; /* Red color for the button */
-    color: rgb(0, 0, 0);
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.modal-content button:hover {
-    background-color: #ffffff;
-}
-
-/* Close button styles */
-.close-btn {
+/* Modal close button */
+.addnewaddress-close-btn {
     background-color: transparent;
-    color: #000; /* Black color for X */
+    color: #000;
     position: absolute;
     top: 10px;
     right: 10px;
@@ -73,21 +67,31 @@
     transition: color 0.3s ease;
 }
 
-.close-btn:hover {
-    color: #f40b37; /* Red when hovered */
+.addnewaddress-close-btn:hover {
+    color: #f40b37;
 }
 
-/* Add New Address button styles */
-.submit-btn {
-    background-color: #f40b37; /* Red color for the submit button */
+/* Add New Address submit button styles */
+.addnewaddress-submit-btn {
+    background-color: #f40b37;
     color: white;
-    padding: 10px;
+    padding: 12px 20px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%; /* Ensure the button takes up full width */
+    font-size: 16px;
 }
 
-.submit-btn:hover {
+/* Hover effect for the submit button */
+.addnewaddress-submit-btn:hover {
     background-color: #d32f2f;
+    transform: scale(1.05); /* Slightly scale the button on hover */
+}
+
+/* Focus effect for the submit button */
+.addnewaddress-submit-btn:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(244, 11, 55, 0.7); /* Subtle glow effect */
 }

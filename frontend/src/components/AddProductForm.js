@@ -1,88 +1,95 @@
 import React, { useState } from "react";
-import "./AddProductForm.css"; 
+import "./AddProductForm.css";
 
 const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
-  // State for the form fields
   const [formData, setFormData] = useState({
     productName: "",
     description: "",
     price: "",
     category: "",
-    supplier: "", // Added supplier field
+    supplier: "",
+    size: "",
+    threshold: "",
+    quantity: "",
+    reorder: "",
     image: null,
   });
 
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [products, setProducts] = useState([]); // State to store the added products
+  const [sizeEntered, setSizeEntered] = useState(false);
 
-  if (!isOpen) return null; // Don't render modal if it's not open
+  if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({ ...prevState, [name]: value }));
+
+    if (name === "size" && value !== "") {
+      setSizeEntered(true);
+    } else if (name === "size" && value === "") {
+      setSizeEntered(false);
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setFormData((prevState) => ({ ...prevState, image: file }));
+    setFormData((prev) => ({ ...prev, image: file }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Check if all fields are filled
     const allFieldsFilled = Object.values(formData).every(
       (value) => value !== "" && value !== null
     );
 
     if (!allFieldsFilled) {
-      setShowErrorModal(true); // Show error modal if fields are missing
+      setShowErrorModal(true);
       return;
     }
 
-    // Format price to PHP (Peso)
     const formattedPrice = `₱${parseFloat(formData.price).toFixed(2)}`;
     const updatedFormData = { ...formData, price: formattedPrice };
 
-    // Send the updated form data back to the parent component
     onSubmit(updatedFormData);
 
-    // Add the product to the state (this simulates adding the product to a list)
-    setProducts((prevProducts) => [...prevProducts, updatedFormData]);
-
-    // Reset the form data
     setFormData({
       productName: "",
       description: "",
       price: "",
       category: "",
-      supplier: "", // Reset supplier
+      supplier: "",
+      size: "",
+      threshold: "",
+      quantity: "",
+      reorder: "",
       image: null,
     });
 
-    onClose(); // Close modal after form submission
+    onClose();
   };
 
   const closeErrorModal = () => setShowErrorModal(false);
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="close-btn" onClick={onClose}>
+    <div className="addproduct-modal-overlay">
+      <div className="addproduct-modal-content">
+        <button className="addproduct-close-btn" onClick={onClose}>
           X
         </button>
-        <br />
-        <h2>Add Product</h2>
-        <br />
+        <h2 className="addproduct-h2">Add Product</h2>
         <form onSubmit={handleSubmit}>
-          {/* Product Image */}
-          <div className="form-group">
+          <div className="addproduct-form-group">
             <label>Product Image</label>
-            <div className="image-upload">
+            <div className="addproduct-image-upload">
               <input type="file" accept="image/*" onChange={handleFileChange} />
-              <div className="image-placeholder">
+              <div className="addproduct-image-placeholder">
                 {formData.image ? (
-                  <img src={URL.createObjectURL(formData.image)} alt="Product" />
+                  <img
+                    src={URL.createObjectURL(formData.image)}
+                    alt="Product"
+                  />
                 ) : (
                   <p>Upload Image</p>
                 )}
@@ -90,8 +97,8 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
             </div>
           </div>
 
-          {/* Product Name */}
-          <div className="form-group">
+          {/* Product Fields */}
+          <div className="addproduct-form-group">
             <label>Product Name</label>
             <input
               type="text"
@@ -102,8 +109,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
             />
           </div>
 
-          {/* Description */}
-          <div className="form-group">
+          <div className="addproduct-form-group">
             <label>Description</label>
             <textarea
               name="description"
@@ -113,8 +119,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
             />
           </div>
 
-          {/* Price */}
-          <div className="form-group">
+          <div className="addproduct-form-group">
             <label>Price (PHP)</label>
             <input
               type="number"
@@ -125,8 +130,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
             />
           </div>
 
-          {/* Category */}
-          <div className="form-group">
+          <div className="addproduct-form-group">
             <label>Category</label>
             <select
               name="category"
@@ -141,8 +145,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
             </select>
           </div>
 
-          {/* Supplier */}
-          <div className="form-group">
+          <div className="addproduct-form-group">
             <label>Supplier</label>
             <input
               type="text"
@@ -153,18 +156,64 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
             />
           </div>
 
-          <button type="submit" className="submit-btn">
+          <div className="addproduct-form-group">
+            <label>Size</label>
+            <input
+              type="text"
+              name="size"
+              value={formData.size}
+              onChange={handleChange}
+              placeholder="Enter size"
+            />
+          </div>
+
+          {sizeEntered && (
+            <>
+              <div className="addproduct-form-group">
+                <label>Threshold</label>
+                <input
+                  type="number"
+                  name="threshold"
+                  value={formData.threshold}
+                  onChange={handleChange}
+                  placeholder="Enter threshold"
+                />
+              </div>
+              <div className="addproduct-form-group">
+                <label>Quantity</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  placeholder="Enter quantity"
+                />
+              </div>
+              <div className="addproduct-form-group">
+                <label>Reorder</label>
+                <input
+                  type="number"
+                  name="reorder"
+                  value={formData.reorder}
+                  onChange={handleChange}
+                  placeholder="Enter reorder amount"
+                />
+              </div>
+            </>
+          )}
+
+          <button type="submit" className="addproduct-submit-btn">
             Add Product
           </button>
         </form>
       </div>
 
       {showErrorModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="addproduct-modal-overlay">
+          <div className="addproduct-modal-content">
             <h2>Missing Fields</h2>
             <p>All fields are required. Please fill in all the fields.</p>
-            <button className="submit-btn" onClick={closeErrorModal}>
+            <button className="addproduct-submit-btn" onClick={closeErrorModal}>
               OK
             </button>
           </div>

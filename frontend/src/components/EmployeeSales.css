@@ -1,23 +1,218 @@
-.employee-sales {
-    padding: 20px;
-  }
+/* General Container */
+.employee-sales-container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Header */
+.employee-sales-header {
+  width: 100%;
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #222;
+  font-weight: bold;
+}
+
+/* Product Section */
+.employee-sales-products-section {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Product List */
+.employee-sales-products-container {
+  width: 55%;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.employee-sales-category-header {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.employee-sales-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.employee-sales-product-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #fafafa;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.employee-sales-product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.employee-sales-product-card img {
+  width: 100%;
+  height: 100px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.employee-sales-product-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.employee-sales-product-price {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.employee-sales-add-to-cart-btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.employee-sales-add-to-cart-btn:hover {
+  background-color: #45a049;
+}
+
+/* Order Summary */
+.employee-sales-order-summary {
+  width: 40%;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.employee-sales-summary-header {
+  font-size: 22px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.employee-sales-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.employee-sales-item-name {
+  flex: 2;
+  font-size: 16px;
+}
+
+.employee-sales-item-quantity {
+  display: flex;
+  align-items: left;
+  gap: 90px;
+  flex: 1;
+  margin-left: -20x; /* Move the quantity slightly to the left */
+}
+
+.employee-sales-item-quantity input {
+  width: 50px;
+  padding: 3px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   
-  .employee-sales table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .employee-sales th, .employee-sales td {
-    border: 1px solid #ccc;
-    padding: 10px;
-    text-align: left;
-  }
-  
-  .employee-sales th {
-    background-color: #f4f4f4;
-  }
-  
-  .employee-sales tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
+}
+
+.employee-sales-item-price {
+  flex: 1;
+  text-align: right;
+  font-size: 16px;
+  font-weight: bold;
+  color: #222;
+}
+
+.employee-sales-remove-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.employee-sales-remove-btn:hover {
+  background-color: #e53935;
+}
+
+/* Total Section */
+/* Total Section */
+.employee-sales-total {
+  font-size: 18px;
+  margin-top: 20px;
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+}
+
+.employee-sales-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.employee-sales-clear-cart-btn,
+.employee-sales-checkout-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.employee-sales-clear-cart-btn {
+  background-color: #ff5722;
+  color: white;
+  border: none;
+}
+
+.employee-sales-clear-cart-btn:hover {
+  background-color: #e64a19;
+}
+
+.employee-sales-checkout-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+}
+
+.employee-sales-checkout-btn:hover {
+  background-color: #45a049;
+}
+
+.employee-sales-clear-cart-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.employee-sales-clear-cart-btn:hover {
+  background-color: #d32f2f;
+}

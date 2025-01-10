@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "./EmployeeNavBar.css";
 
+
 const EmployeeNavBar = ({ onLogout }) => {
   const [menuActive, setMenuActive] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -39,10 +40,10 @@ const EmployeeNavBar = ({ onLogout }) => {
       <nav>
         <ul id="menu" className={`menu ${menuActive ? "active" : ""}`}>
           <li>
-            <Link to="/Sales">Sales</Link> {/* Link to Sales */}
+            <Link to="/EmployeeSales">Sales</Link> {/* Link to Sales */}
           </li>
           <li>
-            <Link to="/History">History</Link> {/* Link to History */}
+            <Link to="/EmployeeHistory">History</Link> {/* Link to History */}
           </li>
         </ul>
 

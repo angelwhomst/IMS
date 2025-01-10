@@ -1,206 +1,188 @@
-/* General Styles */
-.products-container {
-  padding: 20px;
-  font-family: 'Roboto', sans-serif;
+/* Container for the entire product section */
+.womens-catalog-products-container {
+  max-width: 100%; /* Full screen width */
+  padding: 20px; /* Add padding around the edges */
+  margin: 0 auto; /* Center the container */
+  box-sizing: border-box; /* Include padding in calculations */
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center the container */
+  align-items: flex-start; /* Align contents to the left (buttons and products) */
 }
 
-.add-product-btn {
-  display: block;
-  margin: 0 0 20px auto; /* Align to the right */
-  padding: 12px 25px;
-  background-color: #3e8e41; /* A more vibrant color */
+/* Catalog header (Women’s Leather Shoes) */
+.womens-catalog-header {
+  text-align: center; /* Center the header text */
+  font-size: 2em;
+  font-weight: bold;
+  width: 100%; /* Make the header take full width */
+  margin-bottom: 20px; /* Space below the header */
+}
+
+/* Add Product Button */
+.womens-catalog-add-product-btn {
+  background-color: #ff0000;
   color: white;
   border: none;
-  border-radius: 50px; /* Rounded button */
+  border-radius: 5px;
+  padding: 12px 20px;
+  font-size: 1em;
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  float: right; /* Move button to the right */
+  transition: background-color 0.2s;
+  margin-top: 20px; /* Add some spacing from the products grid */
 }
 
-.add-product-btn:hover {
-  background-color: #2d6a2f;
-  transform: scale(1.05);
+.womens-catalog-add-product-btn:hover {
+  background-color: #750101;
 }
 
-.products-grid {
+/* Product Grid */
+.womens-catalog-products-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); /* Fixed 5 columns in a row */
-  gap: 20px;
-  justify-items: center; /* Center items within grid */
-  margin-top: 20px; /* Add some space between the button and the cards */
+  grid-template-columns: repeat(6, 1fr); /* 6 cards per row */
+  gap: 15px; /* Space between cards */
+  margin-top: 20px; /* Adjust spacing for better positioning */
+  width: 100%;
 }
 
-.product-card {
-  width: 100%; /* Full width for responsiveness */
-  max-width: 280px;
-  height: 400px; /* Increased height */
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Product Card */
+.womens-catalog-product-card {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  justify-content: space-between;
+  height: 290px; /* Adjusted height for smaller cards */
+  width: 100%; /* Consistent width within grid */
 }
 
-.product-card img {
+/* Product Image */
+.womens-catalog-product-card img {
   width: 100%;
-  height: 160px;
+  height: 120px; /* Adjusted height for images */
   object-fit: cover;
-  transition: transform 0.3s ease;
 }
 
-.product-card .product-info {
-  padding: 20px;
+/* Product Info */
+.womens-catalog-product-info {
+  padding: 10px;
+  text-align: center;
   flex-grow: 1;
-  color: #444;
 }
 
-.product-card .product-info h3 {
-  font-size: 1.2em;
+.womens-catalog-product-info h3 {
+  margin: 0;
+  font-size: 1em;
   color: #333;
-  font-weight: 600;
-  margin-bottom: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.product-card .product-info p {
+.womens-catalog-product-info p {
+  margin: 5px 0;
   font-size: 0.9em;
-  color: #666;
-  line-height: 1.4;
-  margin-bottom: 20px;
+  color: #555;
 }
 
-.product-card .product-actions {
+/* Product Actions */
+.womens-catalog-product-actions {
   display: flex;
   justify-content: space-between;
-  padding: 12px;
-  background-color: #f8f8f8;
-  border-top: 1px solid #e0e0e0;
+  padding: 10px;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
 }
 
-.product-card .product-actions button {
-  padding: 8px 15px;
+.womens-catalog-product-actions button {
   border: none;
-  border-radius: 30px;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 0.8em;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s;
 }
 
-.product-card .product-actions button.edit-btn {
-  background-color: #4caf50;
+/* Delete Button */
+.womens-catalog-delete-btn {
+  background-color: #fe3835;
   color: white;
 }
 
-.product-card .product-actions button.delete-btn {
-  background-color: #f44336;
-  color: white;
+.womens-catalog-delete-btn:hover {
+  background-color: #d92f2c;
 }
 
-.product-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-}
-
-.product-card img:hover {
-  transform: scale(1.1);
-}
-
-/* Modal Styles */
-.modal-overlay {
+/* Modal Overlay */
+.womens-catalog-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
-.modal-content {
+/* Modal Content */
+.womens-catalog-modal-content {
   background-color: white;
-  padding: 30px;
-  border-radius: 15px;
-  width: 70%;
-  max-width: 900px;
-  max-height: 85vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
 }
 
-.close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
+.womens-catalog-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.womens-catalog-modal-actions button {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.womens-catalog-confirm-btn {
+  background-color: #fe3835;
+  color: white;
+}
+
+.womens-catalog-confirm-btn:hover {
+  background-color: #d92f2c;
+}
+
+.womens-catalog-cancel-btn {
+  background-color: #ccc;
+  color: #333;
+}
+
+.womens-catalog-cancel-btn:hover {
+  background-color: #aaa;
+}
+
+/* Close Button */
+.womens-catalog-close-btn {
   background: none;
   border: none;
-  font-size: 22px;
+  font-size: 1.5em;
+  color: #555;
   cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.womens-catalog-close-btn:hover {
   color: #333;
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 24px;
-  color: #333;
-  width: 100%; /* Ensure header stretches across the full width */
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-label {
-  font-weight: 600;
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: #444;
-}
-
-input, textarea, select {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  margin-bottom: 20px;
-  box-sizing: border-box;
-}
-
-textarea {
-  resize: vertical;
-  min-height: 120px;
-}
-
-.image-upload {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.image-placeholder {
-  width: 100%;
-  height: 220px;
-  background-color: #f9f9f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-}
-
-.image-placeholder img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: cover;
 }

@@ -17,9 +17,9 @@ class UserCreate(BaseModel):
     # updatedAt: datetime
 
 class UserUpdate(BaseModel):
-    firstName: str or None = None
-    lastName: str or None = None
-    password: str or None = None
+    firstName: str | None = None
+    lastName: str | None = None
+    password: str | None = None
 
 
 # admin: create a new employee acc
@@ -65,16 +65,16 @@ async def update_user(user_id: int, user: UserUpdate):
     values = []
 
     if user.firstName:
-        updates.append('firstName = ?')
+        updates.append("firstName = ?")
         values.append(user.firstName)
     if user.lastName:
-        updates.append('lastName = ?')
+        updates.append("lastName = ?")
         values.append(user.lastName)
     if user.password:
         hashed_password = get_password_hash(user.password)
-        updates.append('userPassword = ?')
+        updates.append("userPassword = ?")
         values.append(hashed_password)
-    updates.append('updatedAt = ?')
+    updates.append("updatedAt = ?")
     values.append(datetime.utcnow())
     
     values.append(user_id)

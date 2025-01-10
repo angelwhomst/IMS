@@ -28,11 +28,11 @@ const AddNewAddressModal = ({ onClose }) => {
     };
 
     return (
-        <div className="modal">
-            <div className="modal-content">
-                <button onClick={onClose} className="close-btn">X</button>
+        <div className="addnewaddress-modal">
+            <div className="addnewaddress-modal-content">
+                <button onClick={onClose} className="addnewaddress-close-btn">X</button>
                 <h3>Add New Address</h3>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>Country</label>
                     <input
                         type="text"
@@ -42,7 +42,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter country"
                     />
                 </div>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>Province</label>
                     <input
                         type="text"
@@ -52,7 +52,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter province"
                     />
                 </div>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>City/Municipality</label>
                     <input
                         type="text"
@@ -62,7 +62,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter city/municipality"
                     />
                 </div>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>Barangay</label>
                     <input
                         type="text"
@@ -72,7 +72,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter barangay"
                     />
                 </div>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>Street</label>
                     <input
                         type="text"
@@ -82,7 +82,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter street"
                     />
                 </div>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>Block</label>
                     <input
                         type="text"
@@ -92,7 +92,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter block"
                     />
                 </div>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>House Number</label>
                     <input
                         type="text"
@@ -102,7 +102,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter house number"
                     />
                 </div>
-                <div className="form-group">
+                <div className="addnewaddress-form-group">
                     <label>ZIP Code</label>
                     <input
                         type="text"
@@ -112,7 +112,7 @@ const AddNewAddressModal = ({ onClose }) => {
                         placeholder="Enter ZIP code"
                     />
                 </div>
-                <button onClick={handleAddAddress} className="submit-btn">Add Address</button>
+                <button onClick={handleAddAddress} className="addnewaddress-submit-btn">Add Address</button>
             </div>
         </div>
     );

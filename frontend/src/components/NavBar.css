@@ -39,7 +39,7 @@ header {
         .logo {
             width: 64px;
             height: 64px;
-            background-image: url('C:\Users\Angel Olivarez\Desktop\IMS HELLO\frontend\src\assets\IMS_FINAL_LOGO.jpg');
+            background-image: url('../assets/IMS_FINAL_LOGO.jpg');
             background-size: cover;
             background-position: center;
             border-radius: 50%;
@@ -372,4 +372,4 @@ nav ul.menu {
       transform: scale(1);
     }
   }
-  
+   

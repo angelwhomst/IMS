@@ -1,19 +1,70 @@
-.employee-history {
-    padding: 20px;
+.employee-history-page {
+  font-family: 'Arial', sans-serif;
+  margin: 20px;
+  color: #333;
+}
+
+h1 {
+  display: block; /* Ensure the header is visible */
+  font-size: 2.5rem; /* Adjust the font size as needed */
+  text-align: center; /* Center-align the header */
+  margin-bottom: 20px; /* Add some spacing below the header */
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+  background-color: #fff;
+}
+
+.history-table th,
+.history-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.history-table th {
+  background-color: #fe3835; /* Header background color */
+  color: #fff; /* White text on header */
+  font-weight: bold;
+  font-size: 1.5rem; /* Increased header font size */
+}
+
+.history-table tr:hover {
+  background-color: #ffe2e0; /* Light red hover effect */
+}
+
+.history-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.history-table tbody tr:last-child {
+  border-bottom: 2px solid #fe3835; /* Border color for the last row */
+}
+
+@media (max-width: 768px) {
+  .history-table th,
+  .history-table td {
+    font-size: 14px;
+    padding: 8px 10px;
   }
-  
-  .employee-history ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .employee-history li {
-    margin-bottom: 10px;
-  }
-  
-  .employee-history span {
-    font-size: 0.9em;
-    color: #888;
+}
+
+@media (max-width: 480px) {
+  .employee-history-page {
+    margin: 10px;
   }
 
-  
+  .history-table {
+    font-size: 12px;
+  }
+}

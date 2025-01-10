@@ -29,7 +29,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router> 
       {/* Conditionally render the Admin NavBar or Employee NavBar based on the role */}
       {isAuthenticated && role === 'admin' && <NavBar onLogout={handleLogout} />}
       {isAuthenticated && role === 'employee' && <EmployeeNavBar onLogout={handleLogout} />} {/* Only show EmployeeNavBar for employees */}

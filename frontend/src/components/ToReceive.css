@@ -1,0 +1,78 @@
+/* Header: TO RECEIVE */
+.to-receive-header {
+    font-size: 32px; /* Increased font size */
+    color: #fe3835; /* Red color for header */
+    font-weight: bold;
+    text-align: center; /* Center the header */
+    margin-bottom: 20px;
+  }
+  
+  
+  /* Card Styles */
+  .card {
+    width: 100%;
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .card img {
+    width: 60px;
+    height: auto;
+    margin-right: 16px;
+  }
+  
+  .card .card-details {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+  }
+  
+  .card .card-details p {
+    margin: 0 8px;
+    font-size: 14px;
+    flex: 1;
+    text-align: center;
+  }
+  
+  .card .card-details .product-name {
+    font-weight: bold;
+    font-size: 16px;
+    text-align: left;
+  }
+  
+  /* Received Button */
+  .received-button {
+    background-color: #f40b37; /* Red background color */
+    color: #fff; /* White text color */
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .received-button:hover {
+    background-color: #d3082f; /* Darker red on hover */
+    transform: scale(1.05);
+  }
+  
+  .received-button:active {
+    transform: scale(0.95);
+  }
+  

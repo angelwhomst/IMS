@@ -1,0 +1,97 @@
+/* OrderForm.css */
+
+/* Style adjustments for new product size and category dropdowns */
+.order-form-container {
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 600px;
+    margin: 30px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
+}
+
+.form-title {
+    font-size: 28px;
+    text-align: center;
+    color: #fe3835; /* Updated text color */
+    margin-bottom: 20px;
+}
+
+/* Image Placeholder Styling */
+.product-image-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.product-image {
+    width: 150px; /* Adjust width for a 2x2 picture size */
+    height: 150px; /* Ensure image maintains a square shape */
+    object-fit: cover; /* Ensure proper image cropping if needed */
+    border-radius: 8px;
+}
+
+/* Form Styling */
+.order-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.form-group select {
+    cursor: pointer;
+}
+
+/* Align Add New Address Button with Dropdown and Move It Further Up */
+.add-new-address-btn {
+    margin-top: 0; /* Removed margin-top to make the button directly under the last form element */
+    background-color: #fe3835; /* Updated button background color */
+    color: white;
+    padding: 10px 20px; /* Reduced padding to make the button smaller */
+    width: 150  px; /* Set a fixed width for the button */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    align-self: flex-start; /* Align the button to the left to match the dropdown row */
+    margin-bottom: 15px; /* Optional: Add space below the button */
+}
+
+.add-new-address-btn:hover {
+    background-color: #e03431; /* Darker shade for hover effect */
+}
+
+/* Submit Button */
+.submit-btn {
+    background-color: #f40b37;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: #d32f2f;
+}

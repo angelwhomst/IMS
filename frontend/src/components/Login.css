@@ -1,0 +1,102 @@
+/* Container styles */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+    font-family: 'Arial', sans-serif;
+    background: rgba(0, 0, 0, 0.5); /* Fallback if bg image doesn't load */
+    overflow: hidden;
+  }
+  
+  /* Blurred Background Image */
+  .blur-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url(https://png.pngtree.com/thumb_back/fh260/background/20230426/pngtree-black-leather-shoes-lined-up-on-a-wooden-floor-image_2514825.jpg) no-repeat center center/cover;
+    filter: blur(10px);
+    z-index: -1;
+  }
+  
+  /* Form styles */
+  .login-form {
+    width: 400px; /* Increased width */
+    padding: 40px; /* Adjusted padding for more breathing space */
+    background: rgba(255, 255, 255, 0.95); /* Slightly less transparent for a cleaner look */
+    border-radius: 15px; /* Increased roundness for a modern touch */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); /* Enhanced shadow for better depth */
+    text-align: center;
+    z-index: 1;
+    transform: scale(1.05); /* Subtle enlargement */
+  }
+  
+  /* Headline styles */
+  .login-form h2 {
+    margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .login-description {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 25px;
+  }
+  
+  /* Input styles */
+  .login-form input {
+    width: 100%;
+    padding: 15px; /* More padding for a modern look */
+    margin-bottom: 20px; /* Increased spacing */
+    border: 1px solid #ddd;
+    border-radius: 8px; /* Slightly rounder inputs */
+    font-size: 15px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .login-form input:focus {
+    outline: none;
+    border-color: #fe3835;
+    box-shadow: 0 0 6px rgba(254, 56, 53, 0.4); /* Focus glow */
+  }
+  
+  /* Button styles */
+  .login-btn {
+    width: 100%;
+    padding: 15px; /* Slightly larger button */
+    background: #fe3835;
+    color: #fff;
+    border: none;
+    border-radius: 8px; /* Rounded button */
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .login-btn:hover {
+    background: #7a061e;
+    transform: translateY(-2px); /* Lift effect */
+  }
+  
+  /* Optional: Animation for smoother card appearance */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .login-form {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+      

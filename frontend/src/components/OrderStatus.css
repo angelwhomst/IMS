@@ -1,0 +1,130 @@
+/* Apply sticky behavior to the navbar so it stays fixed when scrolling */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000; /* Keep it above other content */
+    background-color: white; /* Optional: Set a background color for navbar */
+    padding: 10px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for better visibility */
+  }
+  
+  /* Make sure the content scrolls while keeping the navbar visible */
+  .content {
+    overflow-y: auto; /* Allow vertical scrolling */
+    max-height: calc(100vh - 60px); /* Adjust height based on navbar size */
+    padding: 20px;
+  }
+  
+  /* Container for the label and dropdown */
+  .dropdown-container {
+    display: flex;
+    justify-content: flex-end; /* Align dropdown to the right */
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .status-label {
+    margin-right: 10px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .dropdown {
+    font-size: 16px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+    cursor: pointer;
+    width: 200px;
+    transition: outline-color 0.3s ease;
+  }
+  
+  .dropdown:focus {
+    outline: 3px solid #fe3835; /* Outline color */
+  }
+  
+  /* Style for different order statuses */
+  .order-status {
+    font-weight: bold;
+  }
+  
+  /* Unique colors for each status */
+  .order-status.shipped {
+    color: #4caf50; /* Green for Shipped */
+  }
+  
+  .order-status.to-shipped {
+    color: #fe9c35; /* Orange for To Shipped */
+  }
+  
+  .order-status.received {
+    color: #2196f3; /* Blue for Received */
+  }
+  
+  .card {
+    width: 100%;
+    height: 1in;
+    border-radius: 12px;
+    background-color: #fff;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: flex-start; /* Align items to the left */
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .card img {
+    width: 60px; /* Fixed width for the image */
+    height: auto; /* Maintain the aspect ratio */
+    margin-right: 16px; /* Space between the image and the text */
+  }
+  
+  .card .card-details {
+    display: flex;
+    flex-direction: row; /* Arrange items in a row */
+    justify-content: space-between; /* Ensure there's space between details */
+    width: 100%; /* Maximize the space */
+    align-items: center; /* Center the content vertically */
+  }
+  
+  .card .card-details p {
+    margin: 0 8px; /* Space between each detail */
+    font-size: 14px;
+    flex: 1; /* Make each item take equal space */
+    text-align: center; /* Align text to the center */
+  }
+  
+  .card .card-details .product-name {
+    font-weight: bold;
+    font-size: 16px;
+    text-align: left; /* Align product name to the left */
+  }
+  
+  .card .card-details .order-status {
+    font-weight: bold;
+  }
+  
+  /* Header style */
+  .header {
+    color: #fe3835; /* Red color to match the dropdown */
+    font-size: 24px;
+    font-weight: bold;
+  }
+/* Add this to your existing CSS file */
+.order-status-header {
+    font-size: 32px; /* Increased font size */
+    color: #fe3835; /* Green color for header */
+    font-weight: bold;
+    text-align: center; /* Center the header */
+    margin-bottom: 20px;
+  }
+    

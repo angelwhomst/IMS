@@ -1,0 +1,272 @@
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);  /* Softer background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal content specific to AdminTool */
+.admin-modal-content {
+  background: #fff;
+  border-radius: 8px;
+  width: 700px; /* Made the modal wider */
+  padding: 30px;
+  transition: transform 0.3s ease-in-out;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative; /* For the close button positioning */
+}
+
+.admin-modal-content h2 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #fe3835;
+}
+
+/* Close button (X) */
+.admin-close-btn {
+  position: absolute;
+  top: 15px; /* Adjusted positioning */
+  right: 15px; /* Positioned to the top right inside the modal */
+  background: none;
+  border: none;
+  font-size: 24px; /* Increased size for better visibility */
+  color: #fe3835; /* Matching the header color */
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.3s ease;
+}
+
+/* Close button hover effect */
+.admin-close-btn:hover {
+  transform: rotate(90deg); /* Rotate the button for effect */
+  color: #7a061e; /* Darker shade on hover */
+}
+
+.admin-close-btn:focus {
+  outline: none; /* Remove focus outline */
+}
+
+/* Form input fields */
+.admin-form input {
+  margin: 10px 0;
+  padding: 12px;
+  width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.admin-form input:focus {
+  border-color: #fe3835; /* Red border color on focus */
+  outline: none;
+}
+
+/* Submit button */
+.admin-form button {
+  padding: 12px;
+  background-color: #fe3835;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.admin-form button:hover {
+  background-color: #7a061e;
+}
+
+/* Save changes button - red color */
+.admin-form .save-changes {
+  background-color: #fe3835; /* Red color */
+}
+
+.admin-form .save-changes:hover {
+  background-color: #7a061e; /* Updated hover color */
+}
+
+/* Edit button - green color */
+.admin-form .edit-btn {
+  background-color: #4caf50;
+}
+
+/* Delete button - red color */
+.admin-form .delete-btn {
+  background-color: #7a061e;
+}
+
+.admin-form .delete-btn:hover {
+  background-color: #6b051a;
+}
+
+/* Employee list styling */
+.admin-ul {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.admin-ul li {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.admin-ul li:hover {
+  background-color: #f1f1f1;
+}
+
+.admin-ul li span {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.admin-ul li button {
+  background-color: #ffb3b3;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.admin-ul li button:hover {
+  background-color: #ff6666;
+}
+
+/* Scrollable Employee Card */
+.employee-card {
+  width: 100%;
+  max-height: 300px; /* Adjust the height as necessary */
+  overflow-y: auto; /* Make it scrollable */
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Password container */
+.admin-password-container {
+  position: relative;
+}
+
+.admin-eye-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #aaa;
+}
+
+.admin-eye-icon:hover {
+  color: #333;
+}
+
+/* Modal Body with Flexbox */
+.admin-modal-body {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 20px; /* Create a gap between the form and the card */
+}
+
+/* Confirmation Modal (for delete action) */
+.confirmation-modal {
+  background: rgba(0, 0, 0, 0.5);  /* Background overlay */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+
+.confirmation-modal-content {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.confirmation-modal h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.confirmation-modal .btn {
+  padding: 10px 15px;
+  margin: 0 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.confirmation-modal .btn-confirm {
+  background-color: #7a061e; /* Red for confirmation */
+  color: white;
+}
+
+.confirmation-modal .btn-cancel {
+  background-color: #4caf50; /* Green for cancel */
+  color: white;
+}
+
+.confirmation-modal .btn:hover {
+  opacity: 0.8;
+}
+
+/* Added space and alignment for Edit/Delete buttons */
+.admin-ul li .buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%; /* Ensure both buttons are spaced evenly */
+}
+
+.admin-ul li .buttons button {
+  width: 48%; /* Ensure space between buttons */
+}
+
+.admin-ul li .buttons .delete-btn {
+  background-color: #ff4747; /* Red for delete */
+}
+
+.admin-ul li .buttons .edit-btn {
+  background-color: #4caf50; /* Green for edit */
+}
+
+.admin-ul li .buttons button:hover {
+  opacity: 0.9;
+}

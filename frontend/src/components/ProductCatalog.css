@@ -1,0 +1,77 @@
+.catalog-header {
+    text-align: center;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 50px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: #f40b37;
+}
+
+.image-grid {
+    display: flex;
+    justify-content: center; /* Centers the grid */
+    margin: 0 auto;
+    width: 100%; /* Ensures the grid takes up full width */
+    padding: 0 15px; /* Adds even padding on left and right */
+    gap: 25px;
+    flex-wrap: wrap; /* Allows wrapping of items on smaller screens */
+}
+
+.image-item {
+    text-align: center;
+    width: 300px; /* Fixed width for consistency */
+    height: 400px; /* Fixed height */
+    margin: 0;
+    border-radius: 12px;
+    overflow: hidden; /* Prevents any overflow */
+    background-color: white; /* Sets the background color to white */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
+    position: relative; /* Allows the text to be positioned inside */
+}
+
+.image-item:hover {
+    transform: scale(1.05); /* Slight zoom effect */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Stronger shadow on hover */
+}
+
+.image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensures the image fits within the container without stretching or zooming */
+    object-position: center; /* Centers the image */
+    border-radius: 8px;
+}
+
+.image-text {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 18px;
+    margin-top: 15px;
+    color: #333;
+    white-space: nowrap;
+    text-overflow: ellipsis; /* Prevents overflow of text */
+    overflow: hidden;
+    position: absolute; /* Absolute position ensures the text stays inside the image container */
+    bottom: 10px; /* Pushes the text to the bottom of the image */
+    left: 50%;
+    transform: translateX(-50%); /* Centers the text horizontally */
+    z-index: 1; /* Ensures the text is on top of the image */
+}
+
+.image-link {
+    text-decoration: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .image-grid {
+        flex-direction: column; /* Stacks the items vertically */
+        width: 100%; /* Full width */
+    }
+
+    .image-item {
+        width: 100%; /* Makes the image take full width */
+        height: auto; /* Adjusts the height automatically to maintain aspect ratio */
+        margin-left: 0;
+    }
+}

@@ -1,11 +1,42 @@
-from fastapi import * 
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import httpx
 import random
 import string
+import os
+import base64
 from typing import Optional
 import database
-from routers.auth import get_current_active_user, role_required
+from routers.auth import get_current_active_user
+
+# Directory for saving uploaded images
+UPLOAD_DIRECTORY = "images_upload"
+os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
+
+# Function to generate a unique filename for images
+def generate_image_filename():
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=16)) + ".png"
+
+# Function to decode Base64 image and save to file
+def save_base64_image(base64_image: str) -> str:
+    try:
+        # Decode the Base64 string (ignore the data URI prefix if present)
+        if "," in base64_image:
+            base64_image = base64_image.split(",")[1]
+
+        # Fix padding if it's incorrect
+        missing_padding = len(base64_image) % 4
+        if missing_padding:
+            base64_image += "=" * (4 - missing_padding)
+
+        image_data = base64.b64decode(base64_image)
+        filename = generate_image_filename()
+        filepath = os.path.join(UPLOAD_DIRECTORY, filename)
+        with open(filepath, "wb") as file:
+            file.write(image_data)
+        return filepath
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid Base64 image: {str(e)}")
 
 # function to generate barcode
 def generate_barcode():
@@ -19,7 +50,7 @@ def generate_sku():
     sku = ''.join(random.choices(characters, k=8))
     return sku
 
-router = APIRouter(dependencies=[Depends(role_required(["admin"]))])
+router = APIRouter()
 
 # webhook url ---------------------
 
@@ -30,13 +61,15 @@ class Product(BaseModel):
     productName: str
     productDescription: Optional[str] = None
     size: str
-    color: str
+    color: Optional[str] = None
     category: str
     unitPrice: float
+    threshold: int = 0
     reorderLevel: int = 0
     minStockLevel: int = 0
     maxStockLevel: int = 0
-    quantity: int =1 # number of variants to addd
+    quantity: int = 1  # number of variants to add
+    image: str  # Base64 image string
 
 # pydantic model for adding quantities to an existing product
 class AddQuantity(BaseModel):
@@ -45,30 +78,28 @@ class AddQuantity(BaseModel):
     category: str
     quantity: int
 
-# pydantic model for prod variaants
+# pydantic model for product variants
 class ProductVariant(BaseModel):
     productName: str
     barcode: str
     productCode: str
     productDescription: str
     size: str
-    color: str
+    color: Optional[str] = None
     unitPrice: float
-    warehouseID: Optional [int] = None
-    isDamaged: bool = False 
+    warehouseID: Optional[int] = None
+    isDamaged: bool = False
     isWrongItem: bool = False
     isReturned: bool = False
-
 
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
     async with httpx.AsyncClient() as client:
         try:
-            payload = {"productID": product_id, "currentStock": current_stock}
-            response = await client.post(
-                STOCK_WEBHOOK_URL, json=payload)
-            if response.raise_for_status != 200:
-                print(f'error triggering stock webhook: {e}')
+            # Ensure currentStock is treated as an integer
+            payload = {"productID": product_id, "currentStock": int(current_stock)}  # Convert to int if necessary
+            response = await client.post(STOCK_WEBHOOK_URL, json=payload)
+            response.raise_for_status()  # Ensure to check for successful status code
         except Exception as e:
             print(f'Error sending stock webhook: {e}')
 
@@ -78,15 +109,14 @@ async def add_product(product: Product):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
     try:
+        # Save Base64 image to file
+        image_path = save_base64_image(product.image)
+
         # check if a product with the same details already exists
-        await cursor.execute(
-            '''select productID from Products
-            where productname = ? and size=? and category=?
-            and isActive=1''',
-            product.productName,
-            product.size,
-            product.category
-        )
+        await cursor.execute('''select productID from Products
+                                where productname = ? and size=? and category=? 
+                                and isActive=1''',
+                             product.productName, product.size, product.category)
         existing_product = await cursor.fetchone()
 
         if existing_product:
@@ -95,19 +125,21 @@ async def add_product(product: Product):
         
         # insert the new product
         await cursor.execute(''' insert into Products (
-                            productName, productDescription, size, color, category, 
-                    unitPrice, reorderLevel, minStockLevel, maxStockLevel, currentStock)
-                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);''',
-                            product.productName,
-                            product.productDescription,
-                            product.size,
-                            product.color,
-                            product.category,
-                            product.unitPrice,
-                            product.reorderLevel,
-                            product.minStockLevel,
-                            product.maxStockLevel,
-                            product.quantity)
+                                productName, productDescription, size, color, category,  
+                                unitPrice, threshold, reorderLevel, minStockLevel, maxStockLevel, currentStock, image_path)
+                                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);''',
+                             product.productName,
+                             product.productDescription,
+                             product.size,
+                             product.color,
+                             product.category,
+                             float(product.unitPrice),  
+                             product.threshold,
+                             product.reorderLevel,
+                             product.minStockLevel,
+                             product.maxStockLevel,
+                             product.quantity,
+                             image_path)
         await conn.commit()
 
         # get the last inserted productID
@@ -119,24 +151,19 @@ async def add_product(product: Product):
             raise HTTPException(status_code=500, detail='Failed to retrieve productID after insertion')
 
         # insert multiple variants/quantity into productVariants table
-        variants_data= [(
-                    generate_barcode(),
-                    generate_sku(),
-                    product_id )
-                 for _ in range(product.quantity)
-                 ]
+        variants_data = [
+            (generate_barcode(), generate_sku(), product_id)
+            for _ in range(product.quantity)
+        ]
         
-        await cursor.executemany(
-            ''' insert into ProductVariants (barcode, productCode, productID)
-            values (?, ?, ?);''',
-            variants_data
-        )
+        await cursor.executemany(''' insert into ProductVariants (barcode, productCode, productID)
+                                      values (?, ?, ?);''', variants_data)
         await conn.commit()
 
-        # trigger the stock webhook
-        await trigger_stock_webhook(product_id, product.quantity)
+        # trigger the stock webhook with the unitPrice converted to float
+        await trigger_stock_webhook(product_id, float(product.unitPrice))
 
-        return{'message': f'Product {product.productName} added with {product.quantity} variants.'}
+        return {'message': f'Product {product.productName} added with {product.quantity} variants.'}
     
     except Exception as e:
         await conn.rollback()
@@ -223,6 +250,105 @@ group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.wa
             return [dict(zip([column[0] for column in cursor.description], row)) for row in products]
     finally: 
         await conn.close()
+
+
+# get all Womens products
+@router.get("/products/Womens-Leather-Shoes")
+async def get_womens_products():
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try: 
+        await cursor.execute(
+            '''select p.productName, p.productDescription, p.category,
+p.size, p.color, p.unitPrice, p.warehouseID,
+count(pv.variantID) as 'available quantity', p.currentStock,
+p.reorderLevel, p.minStockLevel, p.maxStockLevel
+from products as p
+left join ProductVariants as pv
+on p.productID = pv.productID
+where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Women''s Leather Shoes'
+group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+'''
+        )
+        products = await cursor.fetchall()
+        # map column names to row values
+        return [dict(zip([column[0] for column in cursor.description], row)) for row in products]
+    finally: 
+        await conn.close()
+
+# get all Mens products
+@router.get("/products/Mens-Leather-Shoes")
+async def get_mens_products():
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try: 
+        await cursor.execute(
+            '''select p.productName, p.productDescription, p.category,
+p.size, p.color, p.unitPrice, p.warehouseID,
+count(pv.variantID) as 'available quantity', p.currentStock,
+p.reorderLevel, p.minStockLevel, p.maxStockLevel
+from products as p
+left join ProductVariants as pv
+on p.productID = pv.productID
+where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Men''s Leather Shoes'
+group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+'''
+)
+        products = await cursor.fetchall()
+        # map column names to row values
+        return [dict(zip([column[0] for column in cursor.description], row)) for row in products]
+    finally: 
+        await conn.close()
+
+# get all boy's leather shoes
+@router.get("/products/Boys-Leather-Shoes") 
+async def get_boys_products():
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try: 
+        await cursor.execute(
+            '''select p.productName, p.productDescription, p.category,
+p.size, p.color, p.unitPrice, p.warehouseID,
+count(pv.variantID) as 'available quantity', p.currentStock,
+p.reorderLevel, p.minStockLevel, p.maxStockLevel
+from products as p
+left join ProductVariants as pv
+on p.productID = pv.productID
+where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Boy''s Leather Shoes'
+group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+'''
+)
+        products = await cursor.fetchall()
+        # map column names to row values
+        return [dict(zip([column[0] for column in cursor.description], row)) for row in products]
+    finally: 
+        await conn.close()
+
+# get all girl's leather shoes
+@router.get("/products/Girls-Leather-Shoes")
+async def get_girls_products():
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try: 
+        await cursor.execute(
+            '''select p.productName, p.productDescription, p.category,
+p.size, p.color, p.unitPrice, p.warehouseID,
+count(pv.variantID) as 'available quantity', p.currentStock,
+p.reorderLevel, p.minStockLevel, p.maxStockLevel
+from products as p
+left join ProductVariants as pv
+on p.productID = pv.productID
+where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Girl''s Leather Shoes'
+group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+'''
+)
+        products = await cursor.fetchall()
+        # map column names to row values
+        return [dict(zip([column[0] for column in cursor.description], row)) for row in products]
+    finally: 
+        await conn.close()
+
+
 
 # get one product
 @router.get('/products/{product_id}')

@@ -30,7 +30,10 @@ const MensLeatherShoes = () => {
     closeDeleteModal();
   };
 
-  const openEditProduct = (product) => setProductToEdit(product); // Open the EditProductForm
+  const openEditProduct = (product) => {
+    setProductToEdit(product); // Set the product to edit
+  };
+
   const closeEditProduct = () => setProductToEdit(null); // Close the EditProductForm
 
   // Fetch products from the API when the component mounts
@@ -76,7 +79,7 @@ const MensLeatherShoes = () => {
             <img
               src={product.image_path} // Assuming the API response includes image_path
               alt={product.productName}
-              onClick={() => openEditProduct(product)} // Open the EditProductForm on click
+              onClick={() => openEditProduct(product)} // Pass the product to open the EditProductForm
             />
             <div className="mens-catalog-product-info">
               <h3>{product.productName}</h3>

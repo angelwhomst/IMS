@@ -1,168 +1,131 @@
 import React, { useState, useEffect } from 'react';
 import './EditProductForm.css';
-import EditSizeModal from './EditSizeModal';
 
-const EditProductForm = ({ onClose }) => {
-  const [product, setProduct] = useState(null);
-  const [selectedSize, setSelectedSize] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+const EditProductForm = ({ product, onClose }) => {
+  const [productData, setProductData] = useState(product);
+  const [size, setSize] = useState([]); // Initialize size as an empty array
 
+  // Fetch product size from the backend
   useEffect(() => {
-    const fetchProductData = async () => {
-      const productData = {
-        name: 'KIM',
-        description: 'Stylish shoes for all occasions',
-        price: 1000,
-        quantity: 9,
-        threshold: 5, // Added threshold field
-        reorderQuantity: 10, // Added reorderQuantity field
-        sizes: [6, 7, 8, 9, 10], // Ensure sizes are always an array
-        photo: 'https://via.placeholder.com/300x200',
+    if (productData) {
+      const fetchSize = async () => {
+        try {
+          const response = await fetch(`/ims/products/size?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription || ''}`);
+          if (response.ok) {
+            const data = await response.json();
+            // Check if `data.size` is an array, and handle it accordingly
+            if (Array.isArray(data.size)) {
+              setSize(data.size); // Set the size as an array
+            } else {
+              setSize([]); // If it's not an array, set an empty array
+              console.error('Size data is not an array');
+            }
+          } else {
+            setSize([]); // Set to an empty array if the response is not ok
+            console.error('Product size not found');
+          }
+        } catch (error) {
+          setSize([]); // Set to an empty array in case of an error
+          console.error('Error fetching size:', error);
+        }
       };
-      setProduct(productData);
-    };
-
-    fetchProductData();
-  }, []);
-
-  const handleSizeClick = (size) => {
-    setSelectedSize(size);
-  };
-
-  const handleDeleteSize = () => {
-    if (selectedSize) {
-      const updatedSizes = product.sizes.filter((size) => size !== selectedSize);
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        sizes: updatedSizes,
-      }));
-      setSelectedSize(null);
+      fetchSize();
     }
+  }, [productData]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProductData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  const handleEditClick = () => {
-    if (selectedSize) {
-      setIsModalOpen(true); // Open the modal
-    }
+  const handleSizeClick = (selectedSize) => {
+    setProductData((prevData) => ({
+      ...prevData,
+      selectedSize, // Update product data with the selected size
+    }));
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false); // Close the modal
-  };
-
-  if (!product) return <p>Loading...</p>;
-
-  const generateTableData = () => {
-    if (!selectedSize) return [];
-    const tableData = [];
-    for (let i = 1; i <= product.quantity; i++) {
-      tableData.push({
-        barcode: `BARCODE-${selectedSize}-${i}`,
-        productCode: `CODE-${selectedSize}-${i}`,
-      });
-    }
-    return tableData;
-  };
-
-  const selectedSizeInfo = selectedSize ? (
-    <div>
-      <p><strong>Selected Size:</strong> {selectedSize}</p>
-      <p><strong>Quantity Available:</strong> {product.quantity}</p>
-    </div>
-  ) : (
-    <p>Select a size to see details</p>
-  );
+  if (!productData) return <p>Loading...</p>;
 
   return (
     <div className="edit-product-form">
+      {/* Close Button */}
       <button className="close-button" onClick={onClose}>X</button>
+
       <div className="scrollable-container">
+        {/* Photo Section */}
         <div className="photo-section">
           <div className="photo-placeholder">
-            {product.photo ? <img src={product.photo} alt="Product" /> : 'No Photo Available'}
+            {productData.image_path ? <img src={productData.image_path} alt={productData.productName} /> : 'No Photo Available'}
           </div>
         </div>
 
+        {/* Details Section */}
         <div className="details-section">
           <div className="details">
-            <p><strong>PRODUCT NAME:</strong> {product.name}</p>
-            <p><strong>DESCRIPTION:</strong> {product.description}</p>
-            <p><strong>PRICE:</strong> {product.price}</p>
+            <p><strong>PRODUCT NAME:</strong>
+              <input
+                type="text"
+                name="productName"
+                value={productData.productName}
+                onChange={handleInputChange}
+              />
+            </p>
+            <p><strong>DESCRIPTION:</strong>
+              <textarea
+                name="productDescription"
+                value={productData.productDescription}
+                onChange={handleInputChange}
+              />
+            </p>
+            <p><strong>PRICE:</strong>
+              <input
+                type="number"
+                name="unitPrice"
+                value={productData.unitPrice}
+                onChange={handleInputChange}
+              />
+            </p>
             <p><strong>SIZE:</strong></p>
-            <div className="size-options">
-              {/* Check if product.sizes is defined before rendering */}
-              {product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 ? (
-                product.sizes.map((size, index) => (
+            {size.length > 0 ? (
+              <div className="size-options">
+                {size.map((sizeItem, index) => (
                   <button
                     key={index}
                     className="size-button"
-                    onClick={() => handleSizeClick(size)}
+                    onClick={() => handleSizeClick(sizeItem)}
                   >
-                    {size}
+                    {sizeItem.size}
                   </button>
-                ))
-              ) : (
-                <p>No sizes available</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="size-info-section">
-          <h3>Size Details</h3>
-          {selectedSizeInfo}
-        </div>
-
-        {/* Threshold and Reorder Quantity Section (Above Barcode & Product Code) */}
-        {selectedSize && (
-          <div className="quantity-threshold-section">
-            <p><strong>Threshold:</strong> {product.threshold}</p>
-            <p><strong>Reorder Quantity:</strong> {product.reorderQuantity}</p>
-          </div>
-        )}
-
-        {/* Barcode & Product Code Section */}
-        {selectedSize && (
-          <div className="barcode-table-section">
-            <h3>Barcode & Product Code for Size {selectedSize}</h3>
-            <table className="barcode-table">
-              <thead>
-                <tr>
-                  <th>Size</th>
-                  <th>Barcode</th>
-                  <th>Product Code</th>
-                </tr>
-              </thead>
-              <tbody>
-                {generateTableData().map((data, index) => (
-                  <tr key={index}>
-                    <td>{selectedSize}</td>
-                    <td>{data.barcode}</td>
-                    <td>{data.productCode}</td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            ) : (
+              <p>Loading sizes...</p>
+            )}
+          </div>
+        </div>
+
+        {/* Size Details Section */}
+        {productData.selectedSize && (
+          <div className="quantity-threshold-section">
+            <p><strong>Selected Size:</strong> {productData.selectedSize.size}</p>
+            <p><strong>Quantity Available:</strong> {productData.selectedSize.quantity}</p>
+            <p><strong>Min Quantity:</strong> {productData.selectedSize.minQuantity}</p>
+            <p><strong>Max Quantity:</strong> {productData.selectedSize.maxQuantity}</p>
+            <p><strong>Reorder Quantity:</strong> {productData.reorderQuantity}</p>
           </div>
         )}
 
+        {/* Action Buttons Section */}
         <div className="actions-section">
-          <button className="action-button delete-button" onClick={handleDeleteSize}>DELETE</button>
-          <button className="action-button edit-button" onClick={handleEditClick}>EDIT</button>
+          <button className="action-button save-button" onClick={() => onClose(productData)}>
+            Save
+          </button>
         </div>
       </div>
-
-      {isModalOpen && (
-        <EditSizeModal
-          product={product}
-          selectedSize={selectedSize}
-          onClose={handleModalClose}
-          onSave={(updatedProductData) => {
-            setProduct(updatedProductData); // Handle saving changes
-            handleModalClose(); // Close modal after saving
-          }}
-        />
-      )}
     </div>
   );
 };

@@ -94,6 +94,12 @@ class ProductVariant(BaseModel):
     isWrongItem: bool = False
     isReturned: bool = False
 
+class ProductQueryParams(BaseModel):
+    productName: str
+    productDescription: str
+    unitPrice: float
+    category: str
+
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
     async with httpx.AsyncClient() as client:
@@ -171,6 +177,36 @@ async def add_product(product: Product):
         await conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     
+    finally:
+        await conn.close()
+
+@router.get('/products/size')
+async def get_size(productName: str, unitPrice: float, productDescription: Optional[str] = None):
+    conn = await database.get_db_connection()
+    try:
+        async with conn.cursor() as cursor:
+            # SQL query to fetch all sizes with the same field names used in the frontend code
+            await cursor.execute(''' 
+                SELECT size, currentStock AS quantity, minStockLevel AS minQuantity, maxStockLevel AS maxQuantity, reorderLevel AS reorderQuantity
+                FROM Products 
+                WHERE productName = ? 
+                AND unitPrice = ? 
+                AND (productDescription = ? OR ? IS NULL)
+            ''', (productName, unitPrice, productDescription, productDescription))
+            
+            products = await cursor.fetchall()
+
+            if products:
+                # Map the query results to a list of dictionaries with the field names used in the frontend
+                size_list = [
+                    {"size": product[0], "quantity": product[1], "minQuantity": product[2], "maxQuantity": product[3], "reorderQuantity": product[4]}
+                    for product in products
+                ]
+                return {"size": size_list}  # Return an array of size objects
+            else:
+                raise HTTPException(status_code=404, detail="Product not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()
 
@@ -265,7 +301,7 @@ async def get_womens_products():
     cursor = await conn.cursor()
     try: 
         await cursor.execute(
-            '''sSELECT p.productName, p.productDescription,
+            '''SELECT p.productName, p.productDescription,
        p.size, p.unitPrice, CAST(p.image_path AS VARCHAR(MAX)) AS image_path,
        COUNT(pv.variantID) AS 'available quantity', p.currentStock,
        p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
@@ -274,7 +310,7 @@ LEFT JOIN ProductVariants AS pv
   ON p.productID = pv.productID
 WHERE p.isActive = 1 
   AND pv.isAvailable = 1
-  AND p.category = 'Women''s Leather Shoes'  
+  AND p.category = 'Women'  
 GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
          p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
          CAST(p.image_path AS VARCHAR(MAX));'''
@@ -332,7 +368,7 @@ LEFT JOIN ProductVariants AS pv
   ON p.productID = pv.productID
 WHERE p.isActive = 1 
   AND pv.isAvailable = 1
-  AND p.category = 'Boy''s Leather Shoes' 
+  AND p.category = 'Boys' 
 GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
          p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
          CAST(p.image_path AS VARCHAR(MAX));'''
@@ -359,7 +395,7 @@ LEFT JOIN ProductVariants AS pv
   ON p.productID = pv.productID
 WHERE p.isActive = 1 
   AND pv.isAvailable = 1
-  AND p.category = 'Girl''s Leather Shoes'
+  AND p.category = 'Girls'
 GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
          p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
          CAST(p.image_path AS VARCHAR(MAX));'''
@@ -371,26 +407,33 @@ GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
         await conn.close()
 
 
-
-# get one product
 @router.get('/products/{product_id}')
 async def get_product(product_id: int):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
     try:
+        # Modify the query with proper tuple for product_id
         await cursor.execute('''select p.productName, p.productDescription,
-p.size, p.color, p.unitPrice, 
-p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.warehouseID,
-count(pv.variantID) as 'available quantity'
-from products as p
-left join ProductVariants as pv
-on p.productID = pv.productID
-where p.productID = ? and p.isActive = 1 and pv.isAvailable =1
-group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel''', product_id)
+        p.size, p.unitPrice, CAST(p.image_path AS VARCHAR(MAX)) AS image_path,
+        count(pv.variantID) as 'available quantity'
+        from products as p
+        left join ProductVariants as pv
+        on p.productID = pv.productID
+        where p.productID = ? and p.isActive = 1 and pv.isAvailable = 1
+        group by p.productName, p.productDescription, p.size, p.unitPrice, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold, CAST(p.image_path AS VARCHAR(MAX));
+
+		;''', (product_id,))
+        
+        # Fetch one product (could be fetchall() depending on use case)
         product = await cursor.fetchone()
+        print(product)  # Debugging
+
         if not product:
-            raise HTTPException(status_code=404, detail='product not found')
+            raise HTTPException(status_code=404, detail='Product not found')
+        
+        # Returning product data
         return dict(zip([column[0] for column in cursor.description], product))
+
     finally:
         await conn.close()
 
@@ -482,7 +525,7 @@ where productID = ? ''',
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()
-
+       
 # delete a product
 @router.delete('/products/{product_id}')
 async def delete_product(product_id: int):

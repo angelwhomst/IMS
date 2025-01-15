@@ -1,14 +1,15 @@
-import React, { useState } from "react";
-import "./WomensLeatherShoes.css"; // Create separate styles for Women'sLeatherShoes
+import React, { useState, useEffect } from "react";
+import "./WomensLeatherShoes.css";
 import AddProductForm from "./AddProductForm";
-import EditProductForm from "./EditProductForm"; 
+import EditProductForm from "./EditProductForm";
 
 const WomensLeatherShoes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-  const [productToEdit, setProductToEdit] = useState(null); 
+  const [productToEdit, setProductToEdit] = useState(null);
+  const [error, setError] = useState(null);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -29,8 +30,25 @@ const WomensLeatherShoes = () => {
     closeDeleteModal();
   };
 
-  const openEditProduct = (product) => setProductToEdit(product); 
-  const closeEditProduct = () => setProductToEdit(null); 
+  const openEditProduct = (product) => setProductToEdit(product);
+  const closeEditProduct = () => setProductToEdit(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("/ims/products/Womens-Leather-Shoes");
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+        setError("Could not fetch products. Please try again later.");
+      }
+    };
+    fetchProducts();
+  }, []);
 
   return (
     <div className="womens-catalog-products-container">
@@ -45,24 +63,26 @@ const WomensLeatherShoes = () => {
         onSubmit={addProduct}
       />
 
+      {error && <div className="error-message">{error}</div>}
+
       <div className="womens-catalog-products-grid">
         {products.map((product, index) => (
           <div key={index} className="womens-catalog-product-card">
             <img
-              src={URL.createObjectURL(product.image)}
+              src={product.image_path}
               alt={product.productName}
-              onClick={() => openEditProduct(product)} 
+              onClick={() => openEditProduct(product)}
             />
             <div className="womens-catalog-product-info">
               <h3>{product.productName}</h3>
-              <p>{product.description}</p>
-              <p>Price: {product.price}</p>
+              <p>{product.productDescription}</p>
+              <p>Price: ${product.unitPrice}</p>
             </div>
             <div className="womens-catalog-product-actions">
               <button
                 className="womens-catalog-delete-btn"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   openDeleteModal(product);
                 }}
               >
@@ -75,8 +95,8 @@ const WomensLeatherShoes = () => {
 
       {productToEdit && (
         <EditProductForm
-          product={productToEdit} 
-          onClose={closeEditProduct} 
+          product={productToEdit}
+          onClose={closeEditProduct}
         />
       )}
 

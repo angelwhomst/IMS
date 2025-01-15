@@ -1,5 +1,5 @@
 /* Container for the entire product section */
-.womens-catalog-products-container {
+.girls-catalog-products-container {
   max-width: 100%;
   padding: 20px;
   margin: 0 auto;
@@ -9,8 +9,8 @@
   align-items: flex-start;
 }
 
-/* Catalog header (Women’s Leather Shoes) */
-.womens-catalog-header {
+/* Catalog header (Girl’s Leather Shoes) */
+.girls-catalog-header {
   text-align: center;
   font-size: 2em;
   font-weight: bold;
@@ -19,7 +19,7 @@
 }
 
 /* Add Product Button */
-.womens-catalog-add-product-btn {
+.girls-catalog-add-product-btn {
   background-color: #ff0000;
   color: white;
   border: none;
@@ -31,12 +31,12 @@
   margin-top: 20px;
 }
 
-.womens-catalog-add-product-btn:hover {
+.girls-catalog-add-product-btn:hover {
   background-color: #750101;
 }
 
 /* Product Grid */
-.womens-catalog-products-grid {
+.girls-catalog-products-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 15px;
@@ -45,7 +45,7 @@
 }
 
 /* Product Card */
-.womens-catalog-product-card {
+.girls-catalog-product-card {
   background-color: #f9f9f9;
   border: 1px solid #ccc;
   border-radius: 10px;
@@ -60,20 +60,20 @@
 }
 
 /* Product Image */
-.womens-catalog-product-card img {
+.girls-catalog-product-card img {
   width: 100%;
   height: 120px;
   object-fit: cover;
 }
 
 /* Product Info */
-.womens-catalog-product-info {
+.girls-catalog-product-info {
   padding: 10px;
   text-align: center;
   flex-grow: 1;
 }
 
-.womens-catalog-product-info h3 {
+.girls-catalog-product-info h3 {
   margin: 0;
   font-size: 1em;
   color: #333;
@@ -82,14 +82,14 @@
   text-overflow: ellipsis;
 }
 
-.womens-catalog-product-info p {
+.girls-catalog-product-info p {
   margin: 5px 0;
   font-size: 0.9em;
   color: #555;
 }
 
 /* Product Actions */
-.womens-catalog-product-actions {
+.girls-catalog-product-actions {
   display: flex;
   justify-content: space-between;
   padding: 10px;
@@ -97,7 +97,7 @@
   border-top: 1px solid #ccc;
 }
 
-.womens-catalog-product-actions button {
+.girls-catalog-product-actions button {
   border: none;
   border-radius: 5px;
   padding: 8px 12px;
@@ -107,17 +107,17 @@
 }
 
 /* Delete Button */
-.womens-catalog-delete-btn {
+.girls-catalog-delete-btn {
   background-color: #fe3835;
   color: white;
 }
 
-.womens-catalog-delete-btn:hover {
+.girls-catalog-delete-btn:hover {
   background-color: #d92f2c;
 }
 
 /* Modal Overlay */
-.womens-catalog-modal-overlay {
+.girls-catalog-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -131,7 +131,7 @@
 }
 
 /* Modal Content */
-.womens-catalog-modal-content {
+.girls-catalog-modal-content {
   background-color: white;
   padding: 20px;
   border-radius: 10px;
@@ -140,39 +140,39 @@
   text-align: center;
 }
 
-.womens-catalog-modal-actions {
+.girls-catalog-modal-actions {
   display: flex;
   justify-content: space-between;
   margin-top: 20px;
 }
 
-.womens-catalog-modal-actions button {
+.girls-catalog-modal-actions button {
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
 }
 
-.womens-catalog-confirm-btn {
+.girls-catalog-confirm-btn {
   background-color: #fe3835;
   color: white;
 }
 
-.womens-catalog-confirm-btn:hover {
+.girls-catalog-confirm-btn:hover {
   background-color: #d92f2c;
 }
 
-.womens-catalog-cancel-btn {
+.girls-catalog-cancel-btn {
   background-color: #ccc;
   color: #333;
 }
 
-.womens-catalog-cancel-btn:hover {
+.girls-catalog-cancel-btn:hover {
   background-color: #aaa;
 }
 
 /* Close Button */
-.womens-catalog-close-btn {
+.girls-catalog-close-btn {
   background: none;
   border: none;
   font-size: 1.5em;
@@ -183,6 +183,6 @@
   right: 10px;
 }
 
-.womens-catalog-close-btn:hover {
+.girls-catalog-close-btn:hover {
   color: #333;
 }

@@ -23,6 +23,7 @@ app.add_middleware(
 
 # Mount the frontend folder if needed (for serving static files)
 # app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/images_upload", StaticFiles(directory="images_upload"), name="images")
 
 # Include routers for the various APIs
 app.include_router(inventory.router, prefix='/ims', tags=['inventory'])

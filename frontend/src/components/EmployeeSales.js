@@ -118,7 +118,7 @@ const EmployeeSales = () => {
         quantity: Yup.number().min(1, "Quantity must be at least 1").required("Quantity is required."),
       })
     ).min(1, "Your cart cannot be empty."),
-  });
+  }); //
 
   // Function to send the cart data to the backend /sales/cart endpoint
   const saveCartToBackend = async () => {  

@@ -15,7 +15,7 @@ class CartItemInput(BaseModel):
     category: str
     size: str
     quantity: int
-    price: float
+    # price: float
 
 class CheckoutRequest(BaseModel):
     cart: List[CartItemInput]
@@ -62,8 +62,8 @@ async def add_to_cart(item: CartItemInput):
             "productName": item.productName,
             "category": item.category,
             "size": item.size,
-            "quantity": item.quantity,
-            "price": item.price
+            "quantity": item.quantity
+            #,"price": item.price
         }
         cart.append(cart_item)
 

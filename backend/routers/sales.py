@@ -49,7 +49,7 @@ async def add_to_cart(item: CartItemInput):
 
         productID, currentStock = product_row
 
-        # Check if enough stock is available
+        # check if enough stock is available
         if currentStock < item.quantity:
             raise HTTPException(
                 status_code=400,
@@ -129,3 +129,4 @@ async def checkout(request: CheckoutRequest, current_user=Depends(get_current_ac
 
     finally:
         await conn.close()
+#

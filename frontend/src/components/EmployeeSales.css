@@ -5,6 +5,7 @@
   padding: 20px;
   background-color: #f5f5f5;
   font-family: 'Arial', sans-serif;
+  justify-content: space-between;
 }
 
 /* Header */
@@ -26,7 +27,7 @@
 
 /* Product List */
 .employee-sales-products-container {
-  width: 55%;
+  width: 50%;
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -43,14 +44,17 @@
 
 .employee-sales-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 500px;
 }
 
 .employee-sales-product-card {
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 15px;
+  padding: 10px;
   background-color: #fafafa;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -96,7 +100,7 @@
 
 /* Order Summary */
 .employee-sales-order-summary {
-  width: 40%;
+  width: 50%;
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -110,60 +114,85 @@
   color: #333;
 }
 
+.employee-sales-order-summary-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  padding: 10px 0;
+  border-bottom: 2px solid #ddd;
+}
+
+.employee-sales-order-summary-header span {
+  width: 20%;
+  text-align: center;
+}
+
 .employee-sales-order-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 10px;
+  padding: 10px 0;
   border-bottom: 1px solid #ddd;
 }
 
-.employee-sales-item-name {
-  flex: 2;
-  font-size: 16px;
+.employee-sales-item-name,
+.employee-sales-item-size,
+.employee-sales-item-category,
+.employee-sales-item-quantity,
+.employee-sales-item-price {
+  width: 20%;
+  text-align: center;
+}
+
+/* Adjust order item content */
+.employee-sales-item-size,
+.employee-sales-item-category {
+  width: 15%;  /* Adjust width for category and size */
+  margin-right: 10px;
+}
+
+.employee-sales-item-size input,
+.employee-sales-item-category input {
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #ddd;
+  padding: 5px;
+  width: 100%;
 }
 
 .employee-sales-item-quantity {
+  width: 10%; /* Adjust width to ensure proper alignment */
   display: flex;
-  align-items: left;
-  gap: 90px;
-  flex: 1;
-  margin-left: -20x; /* Move the quantity slightly to the left */
+  align-items: center;
+  gap: 10px;
 }
 
 .employee-sales-item-quantity input {
   width: 50px;
-  padding: 3px;
+  padding: 5px;
+  font-size: 14px;
   text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  
+  border: 1px solid #ddd;
 }
 
 .employee-sales-item-price {
-  flex: 1;
-  text-align: right;
-  font-size: 16px;
-  font-weight: bold;
-  color: #222;
+  font-size: 14px;
+  color: #555;
 }
 
 .employee-sales-remove-btn {
-  background-color: #f44336;
-  color: white;
-  border: none;
+  background-color: #ff0000;
+  color: #fff;
   padding: 5px 10px;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-left: 10px;
+  font-size: 12px;
 }
 
 .employee-sales-remove-btn:hover {
-  background-color: #e53935;
+  background-color: #cc0000;
 }
 
-/* Total Section */
 /* Total Section */
 .employee-sales-total {
   font-size: 18px;
@@ -189,13 +218,13 @@
 }
 
 .employee-sales-clear-cart-btn {
-  background-color: #ff5722;
+  background-color: #f44336;
   color: white;
   border: none;
 }
 
 .employee-sales-clear-cart-btn:hover {
-  background-color: #e64a19;
+  background-color: #d32f2f;
 }
 
 .employee-sales-checkout-btn {
@@ -208,11 +237,60 @@
   background-color: #45a049;
 }
 
-.employee-sales-clear-cart-btn {
-  background-color: #f44336;
-  color: white;
+/* Dropdown Container */
+.employee-sales-category-dropdown select {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid red; /* Red border */
+  border-radius: 5px;
+  background-color: #fff;
+  color: #333;
+  outline: none; /* Remove default focus outline */
+  transition: border-color 0.3s ease; /* Smooth transition */
 }
 
-.employee-sales-clear-cart-btn:hover {
-  background-color: #d32f2f;
+/* Add focus effect */
+.employee-sales-category-dropdown select:focus {
+  border-color: #ff6347; /* Change to a slightly different red when focused */
+}
+
+/* General styling for the header container */
+.employee-sales-order-summary-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  padding: 10px 0;
+  border-bottom: 2px solid #ddd;
+}
+
+/* Style for the Name column */
+.employee-sales-order-summary-header span:nth-child(1) {
+  width: 90%; /* Adjust the width as needed */
+  text-align: left;
+  padding-left: 10px;
+}
+
+/* Style for the Size column */
+.employee-sales-order-summary-header span:nth-child(2) {
+  width: 50%;
+  text-align: left;
+}
+
+/* Style for the Category column */
+.employee-sales-order-summary-header span:nth-child(3) {
+  width: 60%;
+  text-align: left;
+}
+
+/* Style for the Quantity column */
+.employee-sales-order-summary-header span:nth-child(4) {
+  width: 100%;
+  text-align: left;
+}
+
+/* Style for the Price column */
+.employee-sales-order-summary-header span:nth-child(5) {
+  width: 105%;
+  text-align: left;
 }

@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from typing import List
 from pydantic import BaseModel
 import logging
+from fastapi.responses import JSONResponse
 import database
 from routers.auth import role_required, get_current_active_user
 
 
 logging.basicConfig(level=logging.INFO)
-router = APIRouter(dependencies=[Depends(role_required(["admin", "employee"]))])
+router = APIRouter(dependencies=[Depends(role_required(["employee"]))])
 
 # Pydantic Models
 class CartItemInput(BaseModel):
@@ -15,7 +16,7 @@ class CartItemInput(BaseModel):
     category: str
     size: str
     quantity: int
-    # price: float
+    price: float
 
 class CheckoutRequest(BaseModel):
     cart: List[CartItemInput]
@@ -62,8 +63,8 @@ async def add_to_cart(item: CartItemInput):
             "productName": item.productName,
             "category": item.category,
             "size": item.size,
-            "quantity": item.quantity
-            #,"price": item.price
+            "quantity": item.quantity,
+            "price": item.price
         }
         cart.append(cart_item)
 
@@ -83,6 +84,7 @@ async def view_cart():
 # process sales endpoint
 @router.post("/sales/checkout")
 async def checkout(request: CheckoutRequest, current_user=Depends(get_current_active_user)):
+    logging.info(f"Checkout request received: {request}")
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
 
@@ -117,11 +119,16 @@ async def checkout(request: CheckoutRequest, current_user=Depends(get_current_ac
             (current_user.userID, variant_id_list_str)
         )
         await conn.commit()
+        logging.info("Checkout successful.")
 
         #clear in-memory cart after successful checkout
         cart.clear()
-
-        return {'message': 'Checkout successful!'}
+        return JSONResponse(content={"message": "Checkout successful!"}, status_code=200)   
+    
+    except HTTPException as http_err:
+        # Catch HTTP exceptions explicitly
+        logging.error(f"HTTPException occurred: {http_err.detail}")
+        raise http_err
     
     except Exception as e:
         await conn.rollback()
@@ -130,3 +137,66 @@ async def checkout(request: CheckoutRequest, current_user=Depends(get_current_ac
     finally:
         await conn.close()
 
+# sales history for employee
+@router.get('/sales/history')
+async def get_sales_history(current_user=Depends(get_current_active_user)):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try:
+        await cursor.execute(
+            '''exec EmployeeSalesHistory @userID = ?''',
+            current_user.userID
+        )
+        sales_rows = await cursor.fetchall()
+
+        # constructing teh response
+        sales_history = [
+            {
+                "Product Name": row[0],
+                "Category": row[1],
+                "Size": row[2], 
+                "Total Quantity Sold": row[3],
+                "Total Amount": row[4],
+                "Sales Date": row[5].strftime("%m-%d-%Y %I:%M %p"),
+            }
+            for row in sales_rows
+        ]
+
+        return{"Employee Sales History": sales_history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    finally:
+        await conn.close()
+    
+# get products per category for the dropdown in sales logic
+@router.get("/sales/products")
+async def get_products_per_category(category: str = "All Categories"):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try:
+        # call the stored procedure
+        await cursor.execute('exec GetProductByCategory @category = ?', (category,))
+        products = await cursor.fetchall()
+        
+        # format the response
+        product_list = [
+            {
+                "productName": row[0],
+                "size": row[1],
+                "price": f"₱{row[2]:.2f}",
+                "category": row[3],
+                "image": row[4] if row[4] else "https://via.placeholder.com/150"
+            }
+            for row in products
+        ]
+
+        return {"products": product_list}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    finally:
+        await conn.close()

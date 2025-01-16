@@ -6,30 +6,29 @@ const EditSizeModal = ({ product, selectedSize, onClose, onSave }) => {
     name: product?.name || "",
     description: product?.description || "",
     price: product?.price || "",
-    size: selectedSize || "",
-    quantity: product?.quantity || "",
-    threshold: product?.threshold || "",  // Added threshold field
-    reorderQuantity: product?.reorderQuantity || "",  // Added reorderQuantity field
-    photo: product?.photo || null,
+    size: selectedSize?.size || "",
+    quantity: selectedSize?.quantity || "", // Use selected size quantity
+    threshold: selectedSize?.threshold || "",  // Use selected size threshold
+    reorderQuantity: selectedSize?.reorderQuantity || "",  // Use selected size reorder quantity
+    photo: product?.photo || "",  // Default to existing photo URL or path
   });
+
+  // Debugging form data initialization
+  console.log('Form Data:', formData);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({ ...prevState, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFormData((prevState) => ({ ...prevState, photo: file }));
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('Submitting form data:', formData);
     onSave(formData); // Save changes
     onClose(); // Close modal
   };
 
-  if (!product) return null;
+  if (!product || !selectedSize) return null; // Ensure both product and selectedSize are available
 
   return (
     <div className="modal-overlay">
@@ -41,22 +40,12 @@ const EditSizeModal = ({ product, selectedSize, onClose, onSave }) => {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Product Image</label>
-            <div className="image-upload">
-              <input type="file" accept="image/*" onChange={handleFileChange} />
-              <div className="image-placeholder">
-                {formData.photo ? (
-                  <img
-                    src={
-                      typeof formData.photo === "string"
-                        ? formData.photo
-                        : URL.createObjectURL(formData.photo)
-                    }
-                    alt="Product"
-                  />
-                ) : (
-                  <p>No Image Uploaded</p>
-                )}
-              </div>
+            <div className="image-placeholder">
+              {formData.photo ? (
+                <img src={formData.photo} alt="Product" />
+              ) : (
+                <p>No Image Available</p>
+              )}
             </div>
           </div>
 

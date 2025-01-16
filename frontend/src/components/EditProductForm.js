@@ -1,31 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import './EditProductForm.css';
+import EditSizeModal from './EditSizeModal';
 
 const EditProductForm = ({ product, onClose }) => {
   const [productData, setProductData] = useState(product);
-  const [size, setSize] = useState([]); // Initialize size as an empty array
+  const [size, setSize] = useState([]);
+  const [sizeVariants, setSizeVariants] = useState([]);
+  const [selectedSizeDetails, setSelectedSizeDetails] = useState(null);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
 
-  // Fetch product size from the backend
+  // Fetch sizes
   useEffect(() => {
     if (productData) {
       const fetchSize = async () => {
         try {
-          const response = await fetch(`/ims/products/size?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription || ''}`);
+          const response = await fetch(
+            `/ims/products/size?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription || ''}`
+          );
           if (response.ok) {
             const data = await response.json();
-            // Check if `data.size` is an array, and handle it accordingly
             if (Array.isArray(data.size)) {
-              setSize(data.size); // Set the size as an array
+              setSize(data.size);
             } else {
-              setSize([]); // If it's not an array, set an empty array
+              setSize([]);
               console.error('Size data is not an array');
             }
           } else {
-            setSize([]); // Set to an empty array if the response is not ok
+            setSize([]);
             console.error('Product size not found');
           }
         } catch (error) {
-          setSize([]); // Set to an empty array in case of an error
+          setSize([]);
           console.error('Error fetching size:', error);
         }
       };
@@ -33,22 +38,70 @@ const EditProductForm = ({ product, onClose }) => {
     }
   }, [productData]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProductData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+  // Fetch size variants
+  useEffect(() => {
+    if (productData) {
+      const fetchSizeVariants = async () => {
+        try {
+          const response = await fetch(
+            `/ims/products/size_variants?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription || ''}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+              setSizeVariants(data); // Set the fetched size variants
+            } else {
+              setSizeVariants([]);
+              console.error('Size data is not an array');
+            }
+          } else {
+            setSizeVariants([]);
+            console.error('Product size variants not found');
+          }
+        } catch (error) {
+          setSizeVariants([]);
+          console.error('Error fetching size variants:', error);
+        }
+      };
+      fetchSizeVariants();
+    }
+  }, [productData]);
 
   const handleSizeClick = (selectedSize) => {
     setProductData((prevData) => ({
       ...prevData,
-      selectedSize, // Update product data with the selected size
+      selectedSize,
     }));
+
+    const sizeDetails = size.find((item) => item.size === selectedSize.size);
+    setSelectedSizeDetails(sizeDetails || null);
   };
 
-  if (!productData) return <p>Loading...</p>;
+  const handleDeleteSize = (sizeToDelete) => {
+    const updatedSize = size.filter((sizeItem) => sizeItem.size !== sizeToDelete.size);
+    setSize(updatedSize);
+    setSelectedSizeDetails(null); // Clear selected size details
+  };
+
+  const handleSaveSize = (updatedSizeDetails) => {
+    const updatedSize = size.map((sizeItem) =>
+      sizeItem.size === selectedSizeDetails.size ? { ...sizeItem, ...updatedSizeDetails } : sizeItem
+    );
+    setSize(updatedSize);
+    setSelectedSizeDetails(updatedSizeDetails);
+  };
+
+  const handleAddSize = () => {
+    const newSize = {
+      size: 'New Size',
+      threshold: 0,
+      quantity: 0,
+      reorderLevel: 0,
+      maxQuantity: 0,
+      minimumStockLevel: 0,
+    };
+    setSize((prevSize) => [...prevSize, newSize]);
+  };
 
   return (
     <div className="edit-product-form">
@@ -66,66 +119,78 @@ const EditProductForm = ({ product, onClose }) => {
         {/* Details Section */}
         <div className="details-section">
           <div className="details">
-            <p><strong>PRODUCT NAME:</strong>
-              <input
-                type="text"
-                name="productName"
-                value={productData.productName}
-                onChange={handleInputChange}
-              />
-            </p>
-            <p><strong>DESCRIPTION:</strong>
-              <textarea
-                name="productDescription"
-                value={productData.productDescription}
-                onChange={handleInputChange}
-              />
-            </p>
-            <p><strong>PRICE:</strong>
-              <input
-                type="number"
-                name="unitPrice"
-                value={productData.unitPrice}
-                onChange={handleInputChange}
-              />
-            </p>
-            <p><strong>SIZE:</strong></p>
-            {size.length > 0 ? (
-              <div className="size-options">
-                {size.map((sizeItem, index) => (
-                  <button
-                    key={index}
-                    className="size-button"
-                    onClick={() => handleSizeClick(sizeItem)}
-                  >
-                    {sizeItem.size}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p>Loading sizes...</p>
-            )}
+            <p><strong>PRODUCT NAME:</strong> {productData.productName}</p>
+            <p><strong>DESCRIPTION:</strong> {productData.productDescription}</p>
+            <p><strong>PRICE:</strong> {productData.unitPrice}</p>
           </div>
         </div>
 
-        {/* Size Details Section */}
-        {productData.selectedSize && (
-          <div className="quantity-threshold-section">
-            <p><strong>Selected Size:</strong> {productData.selectedSize.size}</p>
-            <p><strong>Quantity Available:</strong> {productData.selectedSize.quantity}</p>
-            <p><strong>Min Quantity:</strong> {productData.selectedSize.minQuantity}</p>
-            <p><strong>Max Quantity:</strong> {productData.selectedSize.maxQuantity}</p>
-            <p><strong>Reorder Quantity:</strong> {productData.reorderQuantity}</p>
-          </div>
-        )}
+        {/* Size Section */}
+        <div className="size-options">
+          {size.map((sizeItem, index) => (
+            <button key={index} className="size-button" onClick={() => handleSizeClick(sizeItem)}>
+              {sizeItem.size}
+            </button>
+          ))}
+        </div>
 
         {/* Action Buttons Section */}
         <div className="actions-section">
-          <button className="action-button save-button" onClick={() => onClose(productData)}>
-            Save
-          </button>
+          <button className="action-button save-button" onClick={() => setEditModalOpen(true)}>EDIT</button>
+          <button className="action-button delete-button" onClick={() => handleDeleteSize(selectedSizeDetails)}>DELETE</button>
+          <button className="action-button add-size-button" onClick={handleAddSize}>ADD SIZE</button>
+        </div>
+
+        {/* Size Information */}
+        {selectedSizeDetails && (
+          <div className="size-details">
+            <h4>Selected Size Details</h4>
+            <p><strong>Threshold:</strong> {selectedSizeDetails.threshold}</p>
+            <p><strong>Quantity:</strong> {selectedSizeDetails.quantity}</p>
+            <p><strong>Reorder Level:</strong> {selectedSizeDetails.reorderQuantity}</p>
+            <p><strong>Maximum Stock Level:</strong> {selectedSizeDetails.maxQuantity}</p>
+            <p><strong>Minimum Stock Level:</strong> {selectedSizeDetails.minQuantity}</p>
+          </div>
+        )}
+
+        {/* Table Section */}
+        <div className="table-section">
+          <h3>Size Information</h3>
+          <table className="size-table">
+            <thead>
+              <tr>
+                <th>Size</th>
+                <th>Barcode</th>
+                <th>Product Code</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sizeVariants.length > 0 ? (
+                sizeVariants.map((variant, index) => (
+                  <tr key={index}>
+                    <td>{variant.size}</td>
+                    <td>{variant.barcode || 'N/A'}</td>
+                    <td>{variant.productCode || 'N/A'}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3">Loading size variants...</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* Edit Size Modal */}
+      {isEditModalOpen && selectedSizeDetails && (
+        <EditSizeModal
+          selectedSize={selectedSizeDetails}
+          onClose={() => setEditModalOpen(false)}
+          onSave={handleSaveSize}
+        />
+      )}
     </div>
   );
 };

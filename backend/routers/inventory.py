@@ -100,6 +100,11 @@ class ProductQueryParams(BaseModel):
     unitPrice: float
     category: str
 
+class ProductVariantResponse(BaseModel):
+    size: str
+    productCode: str
+    barcode: str
+
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
     async with httpx.AsyncClient() as client:
@@ -187,7 +192,7 @@ async def get_size(productName: str, unitPrice: float, productDescription: Optio
         async with conn.cursor() as cursor:
             # SQL query to fetch all sizes with the same field names used in the frontend code
             await cursor.execute(''' 
-                SELECT size, currentStock AS quantity, minStockLevel AS minQuantity, maxStockLevel AS maxQuantity, reorderLevel AS reorderQuantity
+                SELECT size, currentStock AS quantity, minStockLevel AS minQuantity, maxStockLevel AS maxQuantity, reorderLevel AS reorderQuantity, threshold AS threshold
                 FROM Products 
                 WHERE productName = ? 
                 AND unitPrice = ? 
@@ -199,7 +204,7 @@ async def get_size(productName: str, unitPrice: float, productDescription: Optio
             if products:
                 # Map the query results to a list of dictionaries with the field names used in the frontend
                 size_list = [
-                    {"size": product[0], "quantity": product[1], "minQuantity": product[2], "maxQuantity": product[3], "reorderQuantity": product[4]}
+                    {"size": product[0], "quantity": product[1], "minQuantity": product[2], "maxQuantity": product[3], "reorderQuantity": product[4],"threshold":product[5]}
                     for product in products
                 ]
                 return {"size": size_list}  # Return an array of size objects
@@ -209,6 +214,51 @@ async def get_size(productName: str, unitPrice: float, productDescription: Optio
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()
+
+@router.get('/products/size_variants', response_model=list[ProductVariantResponse])
+async def get_size_variants(
+    productName: str,
+    unitPrice: float,
+    productDescription: Optional[str] = None
+):
+    conn = await database.get_db_connection()
+    try:
+        async with conn.cursor() as cursor:
+            # Modified SQL query to include parameters in the WHERE clause
+            await cursor.execute(''' 
+                SELECT 
+                    p.size,
+                    pv.productCode,
+                    pv.barcode
+                FROM 
+                    Products AS p
+                INNER JOIN 
+                    ProductVariants AS pv
+                ON 
+                    p.productID = pv.productID
+                WHERE 
+                    p.isActive = 1 
+                    AND pv.isAvailable = 1 
+                    AND p.productName = ?
+                    AND p.productDescription = ?
+                    AND p.unitPrice = ?;
+            ''', (productName, productDescription, unitPrice))
+
+            variants = await cursor.fetchall()
+
+            if variants:
+                variant_list = [
+                    {"size": variant[0], "productCode": variant[1], "barcode": variant[2]}
+                    for variant in variants
+                ]
+                return variant_list
+            else:
+                raise HTTPException(status_code=404, detail="No matching product variants found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
 
 # add quantities to an existing products
 @router.post('/products/add-quantity')

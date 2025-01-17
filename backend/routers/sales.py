@@ -8,7 +8,7 @@ from routers.auth import role_required, get_current_active_user
 
 
 logging.basicConfig(level=logging.INFO)
-router = APIRouter(dependencies=[Depends(role_required(["employee"]))])
+router = APIRouter()
 
 # Pydantic Models
 class CartItemInput(BaseModel):
@@ -25,7 +25,7 @@ class CheckoutRequest(BaseModel):
 cart = []
 
 # Add to cart
-@router.post("/sales/cart")
+@router.post("/sales/cart", dependencies=[Depends(role_required(["employee"]))])
 async def add_to_cart(item: CartItemInput):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
@@ -77,7 +77,7 @@ async def add_to_cart(item: CartItemInput):
         await conn.close()
 
 # view cart
-@router.get("/sales/cart")
+@router.get("/sales/cart", dependencies=[Depends(role_required(["employee"]))])
 async def view_cart():
     return cart
 
@@ -138,7 +138,7 @@ async def checkout(request: CheckoutRequest, current_user=Depends(get_current_ac
         await conn.close()
 
 # sales history for employee
-@router.get('/sales/history')
+@router.get('/sales/history', dependencies=[Depends(role_required(["employee"]))])
 async def get_sales_history(current_user=Depends(get_current_active_user)):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
@@ -171,7 +171,7 @@ async def get_sales_history(current_user=Depends(get_current_active_user)):
         await conn.close()
     
 # get products per category for the dropdown in sales logic
-@router.get("/sales/products")
+@router.get("/sales/products", dependencies=[Depends(role_required(["employee"]))])
 async def get_products_per_category(category: str = "All Categories"):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
@@ -200,3 +200,36 @@ async def get_products_per_category(category: str = "All Categories"):
     
     finally:
         await conn.close()
+
+
+# sales history admin side
+@router.get('/sales/data', dependencies=[Depends(role_required(["admin"]))])
+async def sales_data():
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try: 
+        await cursor.execute(
+            '''exec SalesData'''
+        )
+        sales_row = await cursor.fetchall()
+
+        # constructing teh response
+        sales_data = [
+            {
+                "Product Name": row[0],
+                "Category": row[1],
+                "Size": row[2], 
+                "Total Quantity Sold": row[3],
+                "Total Amount": row[4],
+                "Sales Date": row[5].strftime("%m-%d-%Y %I:%M %p"),
+            }
+            for row in sales_row
+        ]
+
+        return{"Sales History": sales_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+        

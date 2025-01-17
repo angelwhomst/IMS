@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EditProductForm.css';
 import EditSizeModal from './EditSizeModal';
+import AddSizeModal from './AddSizeModal'; // Import the AddSizeModal component
 
 const EditProductForm = ({ product, category, onClose }) => {
   const [productData, setProductData] = useState(product);
@@ -8,19 +9,16 @@ const EditProductForm = ({ product, category, onClose }) => {
   const [sizeVariants, setSizeVariants] = useState([]);
   const [selectedSizeDetails, setSelectedSizeDetails] = useState(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isAddSizeModalOpen, setAddSizeModalOpen] = useState(false); // Add state for AddSizeModal visibility
   const [error, setError] = useState(null);
 
   // Fetch sizes
   useEffect(() => {
     if (productData) {
-      console.log('Product Data:', productData); // Debug log
-      console.log('Category:', category); // Debug log
-
       const fetchSize = async () => {
         try {
           const categoryParam = category || 'Uncategorized';
           const url = `/ims/products/size?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;
-          console.log("Fetching sizes from:", url);  // Log URL
 
           const response = await fetch(url);
           if (response.ok) {
@@ -30,17 +28,14 @@ const EditProductForm = ({ product, category, onClose }) => {
             } else {
               setSize([]);
               setError("Invalid size data received.");
-              console.error('Size data is not an array');
             }
           } else {
             setSize([]);
             setError("Failed to fetch product size.");
-            console.error('Product size not found');
           }
         } catch (error) {
           setSize([]);
           setError("An error occurred while fetching product size.");
-          console.error('Error fetching size:', error);
         }
       };
       fetchSize();
@@ -50,37 +45,29 @@ const EditProductForm = ({ product, category, onClose }) => {
   // Fetch size variants
   useEffect(() => {
     if (productData) {
-      console.log('Product Data:', productData); // Debug log
-      console.log('Category:', category); // Debug log
-
       const fetchSizeVariants = async () => {
         try {
-          // Correcting the URL by adding backticks for string interpolation
           const response = await fetch(
             `/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&unitPrice=${productData.unitPrice}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`
           );
-  
+
           if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data)) {
-              setSizeVariants(data); // Set the fetched size variants
+              setSizeVariants(data);
             } else {
               setSizeVariants([]);
-              console.error('Size data is not an array');
             }
           } else {
             setSizeVariants([]);
-            console.error('Product size variants not found');
           }
         } catch (error) {
           setSizeVariants([]);
-          console.error('Error fetching size variants:', error);
         }
       };
       fetchSizeVariants();
     }
   }, [productData, category]);
-  
 
   const handleSizeClick = (selectedSize) => {
     setProductData((prevData) => ({
@@ -107,15 +94,7 @@ const EditProductForm = ({ product, category, onClose }) => {
   };
 
   const handleAddSize = () => {
-    const newSize = {
-      size: 'New Size',
-      threshold: 0,
-      quantity: 0,
-      reorderLevel: 0,
-      maxQuantity: 0,
-      minimumStockLevel: 0,
-    };
-    setSize((prevSize) => [...prevSize, newSize]);
+    setAddSizeModalOpen(true); // Open AddSizeModal
   };
 
   return (
@@ -204,13 +183,24 @@ const EditProductForm = ({ product, category, onClose }) => {
       {/* Edit Size Modal */}
       {isEditModalOpen && selectedSizeDetails && (
         <EditSizeModal
-        selectedSize={selectedSizeDetails}
-        productName={productData.productName}
-        productDescription={productData.productDescription}
-        unitPrice={productData.unitPrice}
-        category={category}
-        onClose={() => setEditModalOpen(false)}
-        onSave={handleSaveSize}
+          selectedSize={selectedSizeDetails}
+          productName={productData.productName}
+          productDescription={productData.productDescription}
+          unitPrice={productData.unitPrice}
+          category={category}
+          onClose={() => setEditModalOpen(false)}
+          onSave={handleSaveSize}
+        />
+      )}
+
+      {/* Add Size Modal */}
+      {isAddSizeModalOpen && (
+        <AddSizeModal
+          onClose={() => setAddSizeModalOpen(false)} // Close modal on close
+          onSave={(newSize) => {
+            setSize((prevSize) => [...prevSize, newSize]); // Add the new size
+            setAddSizeModalOpen(false); // Close the modal after saving
+          }}
         />
       )}
     </div>

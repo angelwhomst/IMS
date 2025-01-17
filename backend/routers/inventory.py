@@ -71,7 +71,7 @@ class Product(BaseModel):
     minStockLevel: int = 0
     maxStockLevel: int = 0
     quantity: int = 1  # number of variants to add
-    image: str  # Base64 image string
+    image: Optional[str] = None  # Base64 image string
 
 # pydantic model for adding quantities to an existing product
 class AddQuantity(BaseModel):
@@ -108,17 +108,19 @@ class ProductVariantResponse(BaseModel):
 class ProductUpdate(BaseModel):
     productName: str
     productDescription: str
-    unitPrice: float
-    category: str
     size: str
-    threshold: int
-    quantity: int
-    reorderLevel: int
-    maxStockLevel: int
+    category: str
+    unitPrice: float
+    newSize: str  # Add this field for the updated size
     minStockLevel: int
+    maxStockLevel: int
+    reorderLevel: int
+    threshold: int
 
     class Config:
         orm_mode = True
+
+
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
     async with httpx.AsyncClient() as client:
@@ -199,6 +201,64 @@ async def add_product(product: Product):
     finally:
         await conn.close()
 
+@router.put('/products/update')
+async def update_product(productData: ProductUpdate):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try:
+        # Step 1: Select the productID based on the given fields
+        await cursor.execute('''SELECT productID, productName, productDescription, size, category, 
+                                        unitPrice, minStockLevel, maxStockLevel, reorderLevel, threshold 
+                                 FROM Products
+                                 WHERE productName = ? AND productDescription = ? AND size = ? AND 
+                                       category = ? AND unitPrice = ? AND isActive = 1''',
+                             productData.productName,
+                             productData.productDescription,
+                             productData.size,
+                             productData.category,
+                             float(productData.unitPrice))
+        
+        product_row = await cursor.fetchone()
+
+        if not product_row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
+                       f"size '{productData.size}', category '{productData.category}', and unit price '{productData.unitPrice}' not found."
+            )
+        
+        # Extract the product ID
+        product_id = product_row[0]
+
+        # Debug/Output existing details
+        print("Product ID:", product_id)
+
+        # Step 2: Update the specific fields
+        await cursor.execute('''UPDATE Products
+                                 SET size = ?, minStockLevel = ?, maxStockLevel = ?, 
+                                     reorderLevel = ?, threshold = ?
+                                 WHERE productID = ? AND isActive = 1''',
+                             productData.newSize,
+                             productData.minStockLevel,
+                             productData.maxStockLevel,
+                             productData.reorderLevel,
+                             productData.threshold,
+                             product_id)
+        await conn.commit()
+
+        # Debug: Verify the update
+        print(f"Product with ID {product_id} updated successfully.")
+
+        # Return success message
+        return {"message": f"Product with ID {product_id} updated successfully."}
+
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+
 @router.get('/products/size')
 async def get_size(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
     conn = await database.get_db_connection()
@@ -274,95 +334,6 @@ async def get_size_variants(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()
-
-@router.put('/products')
-async def update_product(productData: ProductUpdate):
-    conn = await database.get_db_connection()
-    cursor = await conn.cursor()
-    try:
-        # Fetch the product ID and current stock from the database
-        await cursor.execute('''SELECT productID, currentStock FROM Products
-                                WHERE productName = ? AND productDescription = ? 
-                                AND unitPrice = ? AND category = ? AND size = ? AND isActive = 1''',
-                             productData.productName,
-                             productData.productDescription,
-                             float(productData.unitPrice),
-                             productData.category,
-                             productData.size)
-        
-        product_row = await cursor.fetchone()
-
-        if not product_row:
-            raise HTTPException(status_code=404,
-                                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
-                                       f"unit price '{productData.unitPrice}', category '{productData.category}', and size '{productData.size}' not found.")
-        
-        product_id, current_stock = product_row
-
-        # Debug: Print fetched product details
-        print(f"Product ID: {product_id}, Current Stock: {current_stock}")
-
-        # Update the product fields, setting currentStock to the new quantity
-        await cursor.execute('''UPDATE Products
-                                SET threshold = ?, currentStock = ?, reorderLevel = ?, 
-                                    maxStockLevel = ?, minStockLevel = ?
-                                WHERE productID = ?;''',
-                             productData.threshold,
-                             productData.quantity,  # Directly set the quantity as the new currentStock
-                             productData.reorderLevel,
-                             productData.maxStockLevel,
-                             productData.minStockLevel,
-                             product_id)
-        await conn.commit()
-
-        # Debug: Verify product update
-        print(f"Updated Product ID: {product_id}, New Stock: {productData.quantity}")
-
-        # Remove extra variants if the new quantity is less than the current stock
-        if productData.quantity < current_stock:
-            # Mark excess variants as unavailable (not needed anymore)
-            await cursor.execute('''UPDATE ProductVariants 
-                                    SET isAvailable = 0
-                                    WHERE productID = ? 
-                                    AND isAvailable = 1 
-                                    AND variantID NOT IN (
-                                        SELECT variantID FROM ProductVariants 
-                                        WHERE productID = ? 
-                                        LIMIT ?
-                                    )''', 
-                                 product_id, product_id, productData.quantity)
-            await conn.commit()
-
-            # Debug: Check how many variants were marked unavailable
-            print(f"Marked excess variants as unavailable for Product ID: {product_id}")
-
-        # Add new variants if needed (if current stock is less than the updated quantity)
-        if productData.quantity > current_stock:
-            num_variants_to_add = productData.quantity - current_stock
-            if num_variants_to_add > 0:
-                # Generate and insert the required number of new variants
-                variants_data = [
-                    (generate_barcode(), generate_sku(), product_id)
-                    for _ in range(num_variants_to_add)
-                ]
-                await cursor.executemany('''INSERT INTO ProductVariants (barcode, productCode, productID)
-                                            VALUES (?, ?, ?);''', variants_data)
-                await conn.commit()
-
-                # Debug: Check how many variants were added
-                print(f"Added {num_variants_to_add} new variants for Product ID: {product_id}")
-
-        # Return success message
-        return {'message': f'Product {productData.productName} updated with {productData.quantity} variants and stock.'}
-
-    except Exception as e:
-        await conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-
-    finally:
-        await conn.close()
-
-
 
 
 # add quantities to an existing products

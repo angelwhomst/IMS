@@ -1,19 +1,19 @@
 /* Modal Overlay */
-.addproduct-modal-overlay {
+.editsize-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6); /* Darker overlay for focus */
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Ensure the modal is on top */
+  z-index: 1000;
 }
 
 /* Modal Content */
-.addproduct-modal-content {
+.editsize-modal-content {
   background-color: #fff;
   padding: 30px;
   border-radius: 12px;
@@ -24,12 +24,12 @@
   overflow-y: auto;
   position: relative;
   box-sizing: border-box;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 /* Title Styling */
-.addproduct-h2 {
+.editsize-h2 {
   text-align: center;
   margin-bottom: 20px;
   font-size: 24px;
@@ -38,7 +38,7 @@
 }
 
 /* Close button (X) */
-.addproduct-close-btn {
+.editsize-close-btn {
   position: absolute;
   top: 15px;
   right: 15px;
@@ -50,29 +50,29 @@
   transition: color 0.3s ease;
 }
 
-.addproduct-close-btn:hover {
-  color: #fe3835; /* Change to red on hover */
+.editsize-close-btn:hover {
+  color: #fe3835;
 }
 
 /* Form Group Styling */
-.addproduct-form-group {
+.editsize-form-group {
   display: flex;
   align-items: center;
-  margin-bottom: 20px; /* Increased margin for better separation */
+  margin-bottom: 20px;
 }
 
-.addproduct-form-group label {
-  width: 30%; /* Label takes 30% of the row width */
+.editsize-form-group label {
+  width: 30%;
   text-align: left;
   font-weight: bold;
-  margin-right: 20px; /* More spacing between label and input */
+  margin-right: 20px;
   font-size: 16px;
   color: #555;
 }
 
-.addproduct-form-group input,
-.addproduct-form-group textarea,
-.addproduct-form-group select {
+.editsize-form-group input,
+.editsize-form-group textarea,
+.editsize-form-group select {
   flex: 1;
   padding: 12px;
   border: 1px solid #ccc;
@@ -82,44 +82,16 @@
   transition: border-color 0.3s ease;
 }
 
-.addproduct-form-group input:focus,
-.addproduct-form-group textarea:focus,
-.addproduct-form-group select:focus {
-  border-color: #fe3835; /* Red border on focus */
+.editsize-form-group input:focus,
+.editsize-form-group textarea:focus,
+.editsize-form-group select:focus {
+  border-color: #fe3835;
   outline: none;
 }
 
-/* Image Upload Container */
-.addproduct-image-upload {
-  display: flex;
-  flex-direction: column;
-}
-
-.addproduct-image-placeholder {
-  width: 120px;
-  height: 120px;
-  border: 2px dashed #ccc;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
-  overflow: hidden;
-  border-radius: 8px;
-  transition: border-color 0.3s ease;
-}
-
-.addproduct-image-placeholder img {
-  max-width: 100%;
-  max-height: 100%;
-}
-
-.addproduct-image-placeholder:hover {
-  border-color: #fe3835; /* Change border color on hover */
-}
-
-/* Submit Button (Add Product) */
-button.addproduct-submit-btn {
-  width: 100%;
+/* Submit Button (Save) */
+button.editsize-save-btn {
+  width: 100px;
   padding: 14px;
   background-color: #fe3835;
   color: white;
@@ -132,41 +104,41 @@ button.addproduct-submit-btn {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-button.addproduct-submit-btn:hover {
+button.editsize-save-btn:hover {
   background-color: #d32f2f;
-  transform: translateY(-2px); /* Lift the button slightly on hover */
+  transform: translateY(-2px);
 }
 
-button.addproduct-submit-btn:active {
-  background-color: #c62828; /* Darker red when clicked */
-  transform: translateY(0); /* Button returns to normal position */
+button.editsize-save-btn:active {
+  background-color: #c62828;
+  transform: translateY(0);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .addproduct-modal-content {
+  .editsize-modal-content {
     width: 95%;
     padding: 20px;
   }
 
-  .addproduct-form-group {
+  .editsize-form-group {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .addproduct-form-group label {
+  .editsize-form-group label {
     width: 100%;
     margin-right: 0;
     margin-bottom: 8px;
   }
 
-  .addproduct-form-group input,
-  .addproduct-form-group textarea,
-  .addproduct-form-group select {
+  .editsize-form-group input,
+  .editsize-form-group textarea,
+  .editsize-form-group select {
     width: 100%;
   }
 
-  button.addproduct-submit-btn {
+  button.editsize-save-btn {
     padding: 12px;
   }
 }

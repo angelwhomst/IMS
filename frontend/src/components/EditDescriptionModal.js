@@ -1,11 +1,14 @@
+// EditDescriptionModal.js
 import React, { useState } from "react";
 import "./EditDescriptionModal.css";
 
-const EditDescriptionModal = ({ product, onClose }) => {
+const EditDescriptionModal = ({ product = {}, category = "", onClose }) => {
   const [editedProduct, setEditedProduct] = useState({
-    productName: product.productName,
-    productDescription: product.productDescription,
-    unitPrice: product.unitPrice,
+    productName: product.productName || "",
+    productDescription: product.productDescription || "",
+    unitPrice: product.unitPrice || 0,
+    category: category || "",
+    image: product.image_path || "", // Default to an empty string if no image
   });
 
   const handleInputChange = (e) => {
@@ -16,10 +19,22 @@ const EditDescriptionModal = ({ product, onClose }) => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setEditedProduct((prevState) => ({
+          ...prevState,
+          image: event.target.result, // Base64 encoded string
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = () => {
-    // Logic to save the edited product, this could be sending the data to an API
     console.log("Edited Product:", editedProduct);
-    // Close the modal after saving
     onClose();
   };
 
@@ -31,6 +46,23 @@ const EditDescriptionModal = ({ product, onClose }) => {
         </button>
         <h2>Edit Product</h2>
         <div className="edit-description-form">
+        <label>
+            Image:
+            <div className="image-upload-container">
+              {editedProduct.image && (
+                <img
+                  src={editedProduct.image}
+                  alt="Product"
+                  className="edit-product-image"
+                />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </div>
+          </label>
           <label>
             Product Name:
             <input
@@ -57,6 +89,16 @@ const EditDescriptionModal = ({ product, onClose }) => {
               onChange={handleInputChange}
             />
           </label>
+          <label>
+            Category:
+            <input
+              type="text"
+              name="category"
+              value={editedProduct.category}
+              onChange={handleInputChange}
+            />
+          </label>
+          
           <button onClick={handleSave}>Save</button>
         </div>
       </div>

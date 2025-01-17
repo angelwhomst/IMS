@@ -258,7 +258,6 @@ async def update_product(productData: ProductUpdate):
     finally:
         await conn.close()
 
-
 @router.get('/products/size')
 async def get_size(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
     conn = await database.get_db_connection()

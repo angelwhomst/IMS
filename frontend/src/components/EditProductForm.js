@@ -2,50 +2,64 @@ import React, { useState, useEffect } from 'react';
 import './EditProductForm.css';
 import EditSizeModal from './EditSizeModal';
 
-const EditProductForm = ({ product, onClose }) => {
+const EditProductForm = ({ product, category, onClose }) => {
   const [productData, setProductData] = useState(product);
   const [size, setSize] = useState([]);
   const [sizeVariants, setSizeVariants] = useState([]);
   const [selectedSizeDetails, setSelectedSizeDetails] = useState(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [error, setError] = useState(null);
 
   // Fetch sizes
   useEffect(() => {
     if (productData) {
+      console.log('Product Data:', productData); // Debug log
+      console.log('Category:', category); // Debug log
+
       const fetchSize = async () => {
         try {
-          const response = await fetch(
-            `/ims/products/size?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription || ''}`
-          );
+          const categoryParam = category || 'Uncategorized';
+          const url = `/ims/products/size?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;
+          console.log("Fetching sizes from:", url);  // Log URL
+
+          const response = await fetch(url);
           if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data.size)) {
               setSize(data.size);
             } else {
               setSize([]);
+              setError("Invalid size data received.");
               console.error('Size data is not an array');
             }
           } else {
             setSize([]);
+            setError("Failed to fetch product size.");
             console.error('Product size not found');
           }
         } catch (error) {
           setSize([]);
+          setError("An error occurred while fetching product size.");
           console.error('Error fetching size:', error);
         }
       };
       fetchSize();
     }
-  }, [productData]);
+  }, [productData, category]);
 
   // Fetch size variants
   useEffect(() => {
     if (productData) {
+      console.log('Product Data:', productData); // Debug log
+      console.log('Category:', category); // Debug log
+
       const fetchSizeVariants = async () => {
         try {
+          // Correcting the URL by adding backticks for string interpolation
           const response = await fetch(
-            `/ims/products/size_variants?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription || ''}`
+            `/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&unitPrice=${productData.unitPrice}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`
           );
+  
           if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data)) {
@@ -65,7 +79,8 @@ const EditProductForm = ({ product, onClose }) => {
       };
       fetchSizeVariants();
     }
-  }, [productData]);
+  }, [productData, category]);
+  
 
   const handleSizeClick = (selectedSize) => {
     setProductData((prevData) => ({
@@ -181,14 +196,21 @@ const EditProductForm = ({ product, onClose }) => {
             </tbody>
           </table>
         </div>
+
+        {/* Error Message */}
+        {error && <div className="error-message">{error}</div>}
       </div>
 
       {/* Edit Size Modal */}
       {isEditModalOpen && selectedSizeDetails && (
         <EditSizeModal
-          selectedSize={selectedSizeDetails}
-          onClose={() => setEditModalOpen(false)}
-          onSave={handleSaveSize}
+        selectedSize={selectedSizeDetails}
+        productName={productData.productName}
+        productDescription={productData.productDescription}
+        unitPrice={productData.unitPrice}
+        category={category}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleSaveSize}
         />
       )}
     </div>

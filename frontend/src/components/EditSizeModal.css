@@ -1,117 +1,172 @@
-/* Overlay styling */
-.EditSize_Modal_Overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-  }
-  
-  /* Modal content container */
-  .EditSize_Modal_Content {
-    background: white;
-    width: 500px;
-    border-radius: 8px;
+/* Modal Overlay */
+.addproduct-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Darker overlay for focus */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure the modal is on top */
+}
+
+/* Modal Content */
+.addproduct-modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1200px;
+  min-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Title Styling */
+.addproduct-h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Close button (X) */
+.addproduct-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.addproduct-close-btn:hover {
+  color: #fe3835; /* Change to red on hover */
+}
+
+/* Form Group Styling */
+.addproduct-form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px; /* Increased margin for better separation */
+}
+
+.addproduct-form-group label {
+  width: 30%; /* Label takes 30% of the row width */
+  text-align: left;
+  font-weight: bold;
+  margin-right: 20px; /* More spacing between label and input */
+  font-size: 16px;
+  color: #555;
+}
+
+.addproduct-form-group input,
+.addproduct-form-group textarea,
+.addproduct-form-group select {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #333;
+  transition: border-color 0.3s ease;
+}
+
+.addproduct-form-group input:focus,
+.addproduct-form-group textarea:focus,
+.addproduct-form-group select:focus {
+  border-color: #fe3835; /* Red border on focus */
+  outline: none;
+}
+
+/* Image Upload Container */
+.addproduct-image-upload {
+  display: flex;
+  flex-direction: column;
+}
+
+.addproduct-image-placeholder {
+  width: 120px;
+  height: 120px;
+  border: 2px dashed #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+}
+
+.addproduct-image-placeholder img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.addproduct-image-placeholder:hover {
+  border-color: #fe3835; /* Change border color on hover */
+}
+
+/* Submit Button (Add Product) */
+button.addproduct-submit-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #fe3835;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 30px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+button.addproduct-submit-btn:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px); /* Lift the button slightly on hover */
+}
+
+button.addproduct-submit-btn:active {
+  background-color: #c62828; /* Darker red when clicked */
+  transform: translateY(0); /* Button returns to normal position */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .addproduct-modal-content {
+    width: 95%;
     padding: 20px;
-    position: relative;
   }
-  
-  /* Close button styling */
-  .EditSize_Close_Btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-  }
-  
-  /* Modal title */
-  .EditSize_Modal_Title {
-    margin-bottom: 20px;
-  }
-  
-  /* Scrollable form container */
-  .EditSize_Form_Scroll_Container {
-    max-height: 400px;
-    overflow-y: auto;
-  }
-  
-  /* Form group styling */
-  .EditSize_Form_Group {
-    margin-bottom: 15px;
-  }
-  
-  /* Label styling */
-  .EditSize_Form_Label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  
-  /* Input, textarea, and select styling */
-  .EditSize_Input,
-  .EditSize_Textarea,
-  .EditSize_Select {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  /* Submit button */
-  .EditSize_Submit_Btn {
-    background-color: #eb9654;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .EditSize_Submit_Btn:hover {
-    background-color: #de7b1e;
-  }
-  
-  /* Image upload section */
-  .EditSize_Image_Upload {
-    display: flex;
+
+  .addproduct-form-group {
     flex-direction: column;
-    align-items: center;
-    margin-bottom: 15px;
+    align-items: flex-start;
   }
-  
-  /* Placeholder for uploaded image */
-  .EditSize_Image_Placeholder {
-    width: 150px;
-    height: 150px;
-    border: 1px solid #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 10px;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #f9f9f9;
-  }
-  
-  /* Image inside the placeholder */
-  .EditSize_Image_Placeholder img {
+
+  .addproduct-form-group label {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    margin-right: 0;
+    margin-bottom: 8px;
   }
-  
-  /* Text for empty placeholder */
-  .EditSize_Image_Placeholder p {
-    color: #888;
-    font-size: 14px;
+
+  .addproduct-form-group input,
+  .addproduct-form-group textarea,
+  .addproduct-form-group select {
+    width: 100%;
   }
-  
+
+  button.addproduct-submit-btn {
+    padding: 12px;
+  }
+}

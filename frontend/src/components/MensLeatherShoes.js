@@ -3,7 +3,6 @@ import "./MensLeatherShoes.css";
 import AddProductForm from "./AddProductForm";
 import EditProductForm from "./EditProductForm"; // Import EditProductForm
 
-
 const MensLeatherShoes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
@@ -32,7 +31,8 @@ const MensLeatherShoes = () => {
   };
 
   const openEditProduct = (product) => {
-    setProductToEdit(product); // Set the product to edit
+    setProductToEdit({ product, category: 'men' }); // Pass category along with the product
+    console.log('Product to edit:', { product, category: 'men' });
   };
 
   const closeEditProduct = () => setProductToEdit(null); // Close the EditProductForm
@@ -80,7 +80,7 @@ const MensLeatherShoes = () => {
             <img
               src={product.image_path} // Assuming the API response includes image_path
               alt={product.productName}
-              onClick={() => openEditProduct(product)} // Pass the product to open the EditProductForm
+              onClick={() => openEditProduct(product)} 
             />
             <div className="mens-catalog-product-info">
               <h3>{product.productName}</h3>
@@ -105,8 +105,9 @@ const MensLeatherShoes = () => {
       {/* EditProductForm Modal */}
       {productToEdit && (
         <EditProductForm
-          product={productToEdit} // Pass the product to EditProductForm
-          onClose={closeEditProduct} // Close the form
+        product={productToEdit.product} // Pass the product to EditProductForm
+        category={productToEdit.category} // Pass the category to EditProductForm
+        onClose={closeEditProduct} // Close the form
         />
       )}
 

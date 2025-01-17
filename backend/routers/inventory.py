@@ -105,6 +105,20 @@ class ProductVariantResponse(BaseModel):
     productCode: str
     barcode: str
 
+class ProductUpdate(BaseModel):
+    productName: str
+    productDescription: str
+    unitPrice: float
+    category: str
+    size: str
+    threshold: int
+    quantity: int
+    reorderLevel: int
+    maxStockLevel: int
+    minStockLevel: int
+
+    class Config:
+        orm_mode = True
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
     async with httpx.AsyncClient() as client:
@@ -186,7 +200,7 @@ async def add_product(product: Product):
         await conn.close()
 
 @router.get('/products/size')
-async def get_size(productName: str, unitPrice: float, productDescription: Optional[str] = None):
+async def get_size(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
     conn = await database.get_db_connection()
     try:
         async with conn.cursor() as cursor:
@@ -196,15 +210,16 @@ async def get_size(productName: str, unitPrice: float, productDescription: Optio
                 FROM Products 
                 WHERE productName = ? 
                 AND unitPrice = ? 
+                AND category = ?
                 AND (productDescription = ? OR ? IS NULL)
-            ''', (productName, unitPrice, productDescription, productDescription))
+            ''', (productName, unitPrice, category, productDescription, productDescription))
             
             products = await cursor.fetchall()
 
             if products:
                 # Map the query results to a list of dictionaries with the field names used in the frontend
                 size_list = [
-                    {"size": product[0], "quantity": product[1], "minQuantity": product[2], "maxQuantity": product[3], "reorderQuantity": product[4],"threshold":product[5]}
+                    {"size": product[0], "quantity": product[1], "minQuantity": product[2], "maxQuantity": product[3], "reorderQuantity": product[4], "threshold": product[5]}
                     for product in products
                 ]
                 return {"size": size_list}  # Return an array of size objects
@@ -219,12 +234,13 @@ async def get_size(productName: str, unitPrice: float, productDescription: Optio
 async def get_size_variants(
     productName: str,
     unitPrice: float,
-    productDescription: Optional[str] = None
+    category: str,
+    productDescription: Optional[str] = None,
 ):
     conn = await database.get_db_connection()
     try:
         async with conn.cursor() as cursor:
-            # Modified SQL query to include parameters in the WHERE clause
+            # Updated query to use the category parameter
             await cursor.execute(''' 
                 SELECT 
                     p.size,
@@ -240,12 +256,12 @@ async def get_size_variants(
                     p.isActive = 1 
                     AND pv.isAvailable = 1 
                     AND p.productName = ?
-                    AND p.productDescription = ?
-                    AND p.unitPrice = ?;
-            ''', (productName, productDescription, unitPrice))
+                    AND (p.productDescription = ? OR ? IS NULL)
+                    AND p.unitPrice = ?
+                    AND p.category = ?;  
+            ''', (productName, productDescription, productDescription, unitPrice, category))
 
             variants = await cursor.fetchall()
-
             if variants:
                 variant_list = [
                     {"size": variant[0], "productCode": variant[1], "barcode": variant[2]}
@@ -258,6 +274,95 @@ async def get_size_variants(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()
+
+@router.put('/products')
+async def update_product(productData: ProductUpdate):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try:
+        # Fetch the product ID and current stock from the database
+        await cursor.execute('''SELECT productID, currentStock FROM Products
+                                WHERE productName = ? AND productDescription = ? 
+                                AND unitPrice = ? AND category = ? AND size = ? AND isActive = 1''',
+                             productData.productName,
+                             productData.productDescription,
+                             float(productData.unitPrice),
+                             productData.category,
+                             productData.size)
+        
+        product_row = await cursor.fetchone()
+
+        if not product_row:
+            raise HTTPException(status_code=404,
+                                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
+                                       f"unit price '{productData.unitPrice}', category '{productData.category}', and size '{productData.size}' not found.")
+        
+        product_id, current_stock = product_row
+
+        # Debug: Print fetched product details
+        print(f"Product ID: {product_id}, Current Stock: {current_stock}")
+
+        # Update the product fields, setting currentStock to the new quantity
+        await cursor.execute('''UPDATE Products
+                                SET threshold = ?, currentStock = ?, reorderLevel = ?, 
+                                    maxStockLevel = ?, minStockLevel = ?
+                                WHERE productID = ?;''',
+                             productData.threshold,
+                             productData.quantity,  # Directly set the quantity as the new currentStock
+                             productData.reorderLevel,
+                             productData.maxStockLevel,
+                             productData.minStockLevel,
+                             product_id)
+        await conn.commit()
+
+        # Debug: Verify product update
+        print(f"Updated Product ID: {product_id}, New Stock: {productData.quantity}")
+
+        # Remove extra variants if the new quantity is less than the current stock
+        if productData.quantity < current_stock:
+            # Mark excess variants as unavailable (not needed anymore)
+            await cursor.execute('''UPDATE ProductVariants 
+                                    SET isAvailable = 0
+                                    WHERE productID = ? 
+                                    AND isAvailable = 1 
+                                    AND variantID NOT IN (
+                                        SELECT variantID FROM ProductVariants 
+                                        WHERE productID = ? 
+                                        LIMIT ?
+                                    )''', 
+                                 product_id, product_id, productData.quantity)
+            await conn.commit()
+
+            # Debug: Check how many variants were marked unavailable
+            print(f"Marked excess variants as unavailable for Product ID: {product_id}")
+
+        # Add new variants if needed (if current stock is less than the updated quantity)
+        if productData.quantity > current_stock:
+            num_variants_to_add = productData.quantity - current_stock
+            if num_variants_to_add > 0:
+                # Generate and insert the required number of new variants
+                variants_data = [
+                    (generate_barcode(), generate_sku(), product_id)
+                    for _ in range(num_variants_to_add)
+                ]
+                await cursor.executemany('''INSERT INTO ProductVariants (barcode, productCode, productID)
+                                            VALUES (?, ?, ?);''', variants_data)
+                await conn.commit()
+
+                # Debug: Check how many variants were added
+                print(f"Added {num_variants_to_add} new variants for Product ID: {product_id}")
+
+        # Return success message
+        return {'message': f'Product {productData.productName} updated with {productData.quantity} variants and stock.'}
+
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        await conn.close()
+
+
 
 
 # add quantities to an existing products

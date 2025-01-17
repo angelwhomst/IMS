@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./NavBar.css";
 import AdminTool from "./AdminTool"; // Import AdminTool component
 
+
 const NavBar = ({ onLogout }) => {
   const [menuActive, setMenuActive] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state for Admin Tool

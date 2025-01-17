@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import "./MensLeatherShoes.css";
+import "./MensLeatherShoes.css"; // Create separate styles for MensLeatherShoes
 import AddProductForm from "./AddProductForm";
-import EditProductForm from "./EditProductForm"; // Import EditProductForm
+import EditProductForm from "./EditProductForm";
 
 const MensLeatherShoes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-  const [productToEdit, setProductToEdit] = useState(null); // State for product to edit
+  const [productToEdit, setProductToEdit] = useState(null);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -29,8 +29,8 @@ const MensLeatherShoes = () => {
     closeDeleteModal();
   };
 
-  const openEditProduct = (product) => setProductToEdit(product); // Open the EditProductForm
-  const closeEditProduct = () => setProductToEdit(null); // Close the EditProductForm
+  const openEditProduct = (product) => setProductToEdit(product);
+  const closeEditProduct = () => setProductToEdit(null);
 
   return (
     <div className="mens-catalog-products-container">
@@ -51,7 +51,7 @@ const MensLeatherShoes = () => {
             <img
               src={URL.createObjectURL(product.image)}
               alt={product.productName}
-              onClick={() => openEditProduct(product)} // Open the EditProductForm on click
+              onClick={() => openEditProduct(product)}
             />
             <div className="mens-catalog-product-info">
               <h3>{product.productName}</h3>
@@ -62,7 +62,7 @@ const MensLeatherShoes = () => {
               <button
                 className="mens-catalog-delete-btn"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent card click
+                  e.stopPropagation();
                   openDeleteModal(product);
                 }}
               >
@@ -75,8 +75,8 @@ const MensLeatherShoes = () => {
 
       {productToEdit && (
         <EditProductForm
-          product={productToEdit} // Pass the product to EditProductForm
-          onClose={closeEditProduct} // Close the form
+          product={productToEdit}
+          onClose={closeEditProduct}
         />
       )}
 
@@ -114,4 +114,3 @@ const MensLeatherShoes = () => {
 };
 
 export default MensLeatherShoes;
-  

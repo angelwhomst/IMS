@@ -8,7 +8,7 @@ const EmployeeHistory = () => {
   const [error, setError] = useState(null);
 
  
-  // Fetch history data from the backend
+  // fetch history data from the backend
   useEffect(() => {
     const fetchHistoryData = async () => {
       const token = localStorage.getItem("access_token");

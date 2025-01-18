@@ -124,6 +124,25 @@ go
 create procedure get_all_orderStatus
 as
 begin
+select p.productName, p.category, p.size,
+pod.orderQuantity,
+format((pod.orderQuantity * p.unitPrice), 'N', 'en-US')as [total price],
+po.statusDate, po.orderStatus
+from 
+	PurchaseOrders as po
+left join 
+	PurchaseOrderDetails as pod on po.orderID = pod.orderID
+left join  
+    productvariants pv on pod.variantid = pv.variantid
+left join 
+    products p on pv.productid = p.productid
+order by po.orderDate desc
+end
+
+create procedure get_orders_by_status
+@orderStatus varchar(50)
+as
+begin
 select p.productName, p.size, p.category,
 pod.orderQuantity,
 format((pod.orderQuantity * p.unitPrice), 'N', 'en-US')as [total price],
@@ -136,5 +155,6 @@ left join
     productvariants pv on pod.variantid = pv.variantid
 left join 
     products p on pv.productid = p.productid
+where po.orderStatus = @orderStatus
 order by po.orderDate desc
 end

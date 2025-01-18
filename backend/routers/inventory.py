@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, File, UploadFile
 from pydantic import BaseModel
 import httpx
 import random
@@ -6,6 +6,8 @@ import string
 import os
 import base64
 from typing import Optional
+import logging
+from fastapi.staticfiles import StaticFiles 
 import database
 from routers.auth import get_current_active_user
 
@@ -69,7 +71,7 @@ class Product(BaseModel):
     minStockLevel: int = 0
     maxStockLevel: int = 0
     quantity: int = 1  # number of variants to add
-    image: str  # Base64 image string
+    image: Optional[str] = None  # Base64 image string
 
 # pydantic model for adding quantities to an existing product
 class AddQuantity(BaseModel):
@@ -91,6 +93,57 @@ class ProductVariant(BaseModel):
     isDamaged: bool = False
     isWrongItem: bool = False
     isReturned: bool = False
+
+class ProductQueryParams(BaseModel):
+    productName: str
+    productDescription: str
+    unitPrice: float
+    category: str
+
+class ProductVariantResponse(BaseModel):
+   size: str
+   productCode: str
+   barcode: str
+
+class ProductUpdate(BaseModel):
+    productName: str
+    productDescription: str
+    size: str
+    category: str
+    unitPrice: float
+    newSize: str
+    minStockLevel: int
+    maxStockLevel: int
+    reorderLevel: int
+    threshold: int
+
+    class Config:
+        orm_mode = True
+
+class ProductUpdates(BaseModel):
+    productName: str  # Current product name
+    productDescription: str  # Current product description
+    category: str  # Current category
+    unitPrice: float  # Current unit price
+    newProductName: str  # New product name
+    newProductDescription: str  # New product description
+    newCategory: str  # New category
+    newUnitPrice: float  # New unit price
+    newImage: str  # New image URL or path
+
+class ADDSIZE(BaseModel):
+    productName: str
+    productDescription: str
+    size: str
+    category: str
+    unitPrice: float
+    threshold: int
+    reorderLevel: int
+    minStockLevel: int
+    maxStockLevel: int
+    quantity: int
+    image: str  = None
+
 
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
@@ -227,7 +280,263 @@ async def add_product_quantity(product: AddQuantity):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()
+
+@router.post('/products/update')
+async def update_product(productData: ProductUpdate):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try:
+        # step 1: select the productID based on the given fields
+        await cursor.execute(
+            '''
+            select productID, productName, productDescription, size, category, unitPrice, minStockLevel, maxStockLevel, reorderLevel, threshold 
+            from Products 
+            where productName = ? AND productDescription = ? AND size = ? AND category = ? AND unitPrice = ? AND isActive = 1''',
+            productData.productName, productData.productDescription,productData.size, productData.category,float(productData.unitPrice))
+        
+        product_row = await cursor.fetchone()
+        if not product_row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
+                       f"size '{productData.size}', category '{productData.category}', and unit price '{productData.unitPrice}' not found."
+            )
+        
+        # extract the product ID
+        product_id = product_row[0]
+
+        # step 2: update the specific fields
+        await cursor.execute('''update Products
+                                 set size = ?, minStockLevel = ?, maxStockLevel = ?,
+                                     reorderLevel = ?, threshold = ?
+                                 where productID = ? AND isActive = 1''',
+                             productData.newSize,
+                             productData.minStockLevel,
+                             productData.maxStockLevel,
+                             productData.reorderLevel,
+                             productData.threshold,
+                             product_id)
+        await conn.commit()
+
+        # step 3: return success message with updated data
+        return {"message": f"Product with ID {product_id} updated successfully.",
+                "updated_product": {
+                    "productID": product_id,
+                    "newSize": productData.newSize,
+                    "minStockLevel": productData.minStockLevel,
+                    "maxStockLevel": productData.maxStockLevel,
+                    "reorderLevel": productData.reorderLevel,
+                    "threshold": productData.threshold
+                }}
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+# add a new size to an existing product
+@router.post('/products/add-size')
+async def add_size(product: ADDSIZE):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try:
+        # step 1: check if product exists
+        await cursor.execute(
+            '''SELECT 1
+            FROM Products
+            WHERE productName = ? AND productDescription = ? AND size = ? AND isActive = 1''',
+            product.productName, product.productDescription, product.size)
+        
+        existing_product = await cursor.fetchone()
+
+        if existing_product:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Product with name '{product.productName}', description '{product.productDescription}', and size '{product.size}' already exists."
+            )
+        
+        # step 2: save base64 image to file
+        image_path = None
+        if product.image:
+            image_path = save_base64_image(product.image)   
+
+        # step 3: insert the new size (which allows different sizes for the same product name and category)
+        await cursor.execute(
+            '''
+            INSERT INTO Products (productName, productDescription, size, category, unitPrice, threshold, reorderLevel, minStockLevel, maxStockLevel, currentStock, image_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);''',
+            product.productName, product.productDescription, product.size, product.category, float(product.unitPrice), product.threshold, product.reorderLevel, product.minStockLevel, product.maxStockLevel, product.quantity, image_path
+        )
+        await conn.commit()
+
+        # step 4: get the last inserted productID
+        await cursor.execute("SELECT IDENT_CURRENT('Products')")
+        product_id_row = await cursor.fetchone()
+        product_id = product_id_row[0] if product_id_row else None
+
+        if not product_id:
+            raise HTTPException(status_code=500, detail='Failed to retrieve productID after insertion')
+        
+        # step 5: insert multiple variants/quantity into productVariants table
+        variants_data = [
+            (generate_barcode(), generate_sku(), product_id)
+            for _ in range(product.quantity)
+        ]
+        await cursor.executemany(
+            '''INSERT INTO ProductVariants (barcode, productCode productID)
+            values (?, ?, ?);''', variants_data )
+        await conn.commit()
+
+        # step 6: trigger the stock webhook with the unitPrice converted to float
+        await trigger_stock_webhook(product_id, float(product.unitPrice))
+
+        return {'message': f'Product {product.productName} added with {product.quantity} variants.'}
     
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+# get all sizes of a product
+@router.get('/products/sizes')
+async def get_size(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try:
+        await cursor.execute
+        (
+            '''SELECT size, currentStock AS quantity, minStockLevel AS minQuantity, maxStockLevel AS maxQuantity, reorderLevel AS reorderQuantity, threshold AS threshold
+                FROM Products
+                WHERE productName = ?
+                AND unitPrice = ?
+                AND category = ?
+                AND (productDescription = ? OR ? IS NULL)''',
+                (productName, unitPrice, category, productDescription, productDescription)
+        )
+        products = await cursor.fetchall()
+
+        if products:
+            # map the query results to a list of dictionaries with the field names used in the frontend
+            size_list = [
+                {
+                    "size": product[0],
+                    "quantity": product[1],
+                    "minQuantity": product[2],
+                    "maxQuantity": product[3],
+                    "reorderQuantity": product[4],
+                    "threshold": product[5]
+                }
+                for product in products
+            ]
+            return {"size": size_list}
+        else:
+            raise HTTPException(status_code=404, detail="Product not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+@router.get('/products/size_variants', response_model=list[ProductVariantResponse])
+async def get_size_variants(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try:
+        await cursor.execute(
+            '''SELECT p.size, pv.productCode, pv.barcode
+                FROM
+                    Products AS p
+                INNER JOIN
+                    ProductVariants AS pv
+                ON
+                    p.productID = pv.productID
+                WHERE
+                    p.isActive = 1
+                    AND pv.isAvailable = 1
+                    AND p.productName = ?
+                    AND (p.productDescription = ? OR ? IS NULL)
+                    AND p.unitPrice = ?
+                    AND p.category = ?;  
+            ''', (productName, productDescription, productDescription, unitPrice, category))
+        variants = await cursor.fetchall()
+
+        if variants:
+            variant_list = [
+                {
+                    "size": variant[0],
+                    "productCode": variant[1],
+                    "barcode": variant[2]
+                }
+                for variant in variants
+            ]
+            return variant_list
+        else:
+            raise HTTPException(status_code=404, detail="Product not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:    
+        await conn.close()
+
+#update product details such as name, description, category, unit price, and image
+@router.put('/products/update-details')
+async def update_product_details(productData: ProductUpdates):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+
+    try:
+        # step 1: select the productID based on the given fields
+        await cursor.execute(
+            '''select productID, productName, productDescription, category, unitPrice, image_path
+            from Products
+            where productName = ? and productDescription = ? and category = ? and unitPrice = ? and isActive = 1''',
+            productData.productName, productData.productDescription, productData.category, float(productData.unitPrice)
+        )
+        product_row = await cursor.fetchone()
+
+        if not product_row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
+                       f"category '{productData.category}', and unit price '{productData.unitPrice}' not found."
+            )
+        
+        # extract the product ID
+        product_id = product_row[0]
+
+        # step 2: update the specific fields
+        await cursor.execute(
+            '''update Products
+            set productName = ?, productDescription = ?, category = ?, unitPrice = ?
+            where productID = ? AND isActive = 1''',
+            productData.newProductName, productData.newProductDescription, productData.newCategory, float(productData.newUnitPrice), product_id)
+        await conn.commit()
+
+        # fetch the updated product 
+        await cursor.execute(
+            '''
+            select productName, productDescription, category, unitPrice, image_path
+            from Products
+            where productID = ? and isActive = 1''', (product_id,))
+        updated_product = await cursor.fetchone()
+
+        return {"message": f"Product with ID {product_id} updated successfully.",
+                "updated_product": {
+                    "productName": updated_product[0],
+                    "productDescription": updated_product[1],
+                    "category": updated_product[2],
+                    "unitPrice": updated_product[3],
+                    "image_path": updated_product[4]
+                }}
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
 # get all productss 
 @router.get("/products")
 async def get_products():
@@ -236,14 +545,15 @@ async def get_products():
         async with conn.cursor() as cursor:
             await cursor.execute('''
 select p.productName, p.productDescription,
-p.size, p.color, p.unitPrice, p.warehouseID,
+p.size, p.unitPrice,
 count(pv.variantID) as 'available quantity', p.currentStock,
-p.reorderLevel, p.minStockLevel, p.maxStockLevel
+p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold,
+cast(p.image_path as varchar(max)) as image_path
 from products as p
 left join ProductVariants as pv
 on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1
-group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+group by p.productName, p.productDescription, p.size, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold, cast(p.image_path as varchar(max));
 ''')
             products = await cursor.fetchall()
             # map column names to row values
@@ -260,14 +570,14 @@ async def get_womens_products():
     try: 
         await cursor.execute(
             '''select p.productName, p.productDescription, p.category,
-p.size, p.color, p.unitPrice, p.warehouseID,
+p.size, p.unitPrice, cast(p.image_path as varchar(max)),
 count(pv.variantID) as 'available quantity', p.currentStock,
-p.reorderLevel, p.minStockLevel, p.maxStockLevel
+p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
 from products as p
 left join ProductVariants as pv
 on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Women''s Leather Shoes'
-group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+group by p.productName, p.productDescription, p.category, p.size, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold, cast(p.image_path as varchar(max))
 '''
         )
         products = await cursor.fetchall()
@@ -284,14 +594,14 @@ async def get_mens_products():
     try: 
         await cursor.execute(
             '''select p.productName, p.productDescription, p.category,
-p.size, p.color, p.unitPrice, p.warehouseID,
+p.size, p.unitPrice, cast(p.image_path as varchar(max)),
 count(pv.variantID) as 'available quantity', p.currentStock,
-p.reorderLevel, p.minStockLevel, p.maxStockLevel
+p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
 from products as p
 left join ProductVariants as pv
 on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Men''s Leather Shoes'
-group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+group by p.productName, p.productDescription, p.category, p.size, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold, cast(p.image_path as varchar(max))
 '''
 )
         products = await cursor.fetchall()
@@ -308,14 +618,14 @@ async def get_boys_products():
     try: 
         await cursor.execute(
             '''select p.productName, p.productDescription, p.category,
-p.size, p.color, p.unitPrice, p.warehouseID,
+p.size, p.unitPrice, cast(p.image_path as varchar(max)),
 count(pv.variantID) as 'available quantity', p.currentStock,
-p.reorderLevel, p.minStockLevel, p.maxStockLevel
+p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
 from products as p
 left join ProductVariants as pv
 on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Boy''s Leather Shoes'
-group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+group by p.productName, p.productDescription, p.category, p.size, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold, cast(p.image_path as varchar(max))
 '''
 )
         products = await cursor.fetchall()
@@ -332,14 +642,14 @@ async def get_girls_products():
     try: 
         await cursor.execute(
             '''select p.productName, p.productDescription, p.category,
-p.size, p.color, p.unitPrice, p.warehouseID,
+p.size, p.unitPrice, cast(p.image_path as varchar(max)),
 count(pv.variantID) as 'available quantity', p.currentStock,
-p.reorderLevel, p.minStockLevel, p.maxStockLevel
+p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
 from products as p
 left join ProductVariants as pv
 on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Girl''s Leather Shoes'
-group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+group by p.productName, p.productDescription, p.category, p.size, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold, cast(p.image_path as varchar(max))
 '''
 )
         products = await cursor.fetchall()
@@ -348,8 +658,6 @@ group by p.productName, p.productDescription, p.category, p.size, p.color, p.uni
     finally: 
         await conn.close()
 
-
-
 # get one product
 @router.get('/products/{product_id}')
 async def get_product(product_id: int):
@@ -357,14 +665,15 @@ async def get_product(product_id: int):
     cursor = await conn.cursor()
     try:
         await cursor.execute('''select p.productName, p.productDescription,
-p.size, p.color, p.unitPrice, 
+p.size, p.unitPrice, cast(p.image_path as varchar(max)),
 p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.warehouseID,
 count(pv.variantID) as 'available quantity'
 from products as p
 left join ProductVariants as pv
 on p.productID = pv.productID
 where p.productID = ? and p.isActive = 1 and pv.isAvailable =1
-group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel''', product_id)
+group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, cast(p.image_path as varchar(max))l''', (product_id,)
+)
         product = await cursor.fetchone()
         if not product:
             raise HTTPException(status_code=404, detail='product not found')

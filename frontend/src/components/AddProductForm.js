@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import "./AddProductForm.css";
 
 const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
@@ -7,11 +8,12 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
     description: "",
     price: "",
     category: "",
-    supplier: "",
     size: "",
     threshold: "",
     quantity: "",
     reorder: "",
+    maxStockLevel: "",
+    minStockLevel: "",
     image: null,
   });
 
@@ -34,12 +36,31 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setFormData((prev) => ({ ...prev, image: file }));
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
+
+    if (file && file.type.startsWith("image/")) {
+      if (file.size > MAX_FILE_SIZE) {
+        alert("File size exceeds the 5MB limit.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFormData((prev) => ({ ...prev, image: reader.result }));
+      };
+      reader.onerror = () => {
+        alert("Error reading the file.");
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert("Please upload a valid image file.");
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Check if all fields are filled
     const allFieldsFilled = Object.values(formData).every(
       (value) => value !== "" && value !== null
     );
@@ -49,28 +70,42 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
-    const formattedPrice = `₱${parseFloat(formData.price).toFixed(2)}`;
-    const updatedFormData = { ...formData, price: formattedPrice };
+    const payload = {
+      productName: formData.productName,
+      productDescription: formData.description,
+      unitPrice: parseFloat(formData.price), // Ensure price is a float
+      category: formData.category,
+      size: formData.size,
+      threshold: formData.threshold ? parseInt(formData.threshold, 10) : null, // Convert to integer
+      quantity: parseInt(formData.quantity, 10), // Convert to integer
+      reorderLevel: parseInt(formData.reorder, 10), // Convert to integer
+      maxStockLevel: parseInt(formData.maxStockLevel, 10), // Convert to integer
+      minStockLevel: parseInt(formData.minStockLevel, 10), // Convert to integer
+      image: formData.image, // Base64 string
+    };
 
-    onSubmit(updatedFormData);
-
-    setFormData({
-      productName: "",
-      description: "",
-      price: "",
-      category: "",
-      supplier: "",
-      size: "",
-      threshold: "",
-      quantity: "",
-      reorder: "",
-      image: null,
-    });
-
-    onClose();
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "http://127.0.0.1:8000/ims/products",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert("Product added successfully");
+      onSubmit();
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
   };
 
-  const closeErrorModal = () => setShowErrorModal(false);
+  const closeErrorModal = () => {
+    setShowErrorModal(false);
+  };
 
   return (
     <div className="addproduct-modal-overlay">
@@ -80,20 +115,19 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
         </button>
         <h2 className="addproduct-h2">Add Product</h2>
         <form onSubmit={handleSubmit}>
-          <div className="addproduct-form-group">
-            <label>Product Image</label>
-            <div className="addproduct-image-upload">
-              <input type="file" accept="image/*" onChange={handleFileChange} />
-              <div className="addproduct-image-placeholder">
-                {formData.image ? (
-                  <img
-                    src={URL.createObjectURL(formData.image)}
-                    alt="Product"
-                  />
-                ) : (
-                  <p>Upload Image</p>
-                )}
-              </div>
+          {/* Image Upload */}
+          <div className="addproduct-image-upload">
+            <input type="file" accept="image/*" onChange={handleFileChange} />
+            <div className="addproduct-image-placeholder">
+              {formData.image ? (
+                <img
+                  src={formData.image}
+                  alt="Product"
+                  style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                />
+              ) : (
+                <p>Upload Image</p>
+              )}
             </div>
           </div>
 
@@ -138,22 +172,11 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
               onChange={handleChange}
             >
               <option value="">Select Category</option>
-              <option value="men">Men's Leather Shoes</option>
-              <option value="women">Women's Leather Shoes</option>
-              <option value="girls">Girls Leather Shoes</option>
-              <option value="boys">Boys Leather Shoes</option>
+              <option value="Men's Leather Shoes">Men's Leather Shoes</option>
+              <option value="Women's Leather Shoes">Women's Leather Shoes</option>
+              <option value="Girl's Leather Shoes">Girls Leather Shoes</option>
+              <option value="Boy's Leather Shoes">Boys Leather Shoes</option>
             </select>
-          </div>
-
-          <div className="addproduct-form-group">
-            <label>Supplier</label>
-            <input
-              type="text"
-              name="supplier"
-              value={formData.supplier}
-              onChange={handleChange}
-              placeholder="Enter supplier name"
-            />
           </div>
 
           <div className="addproduct-form-group">
@@ -197,6 +220,26 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
                   value={formData.reorder}
                   onChange={handleChange}
                   placeholder="Enter reorder amount"
+                />
+              </div>
+              <div className="addproduct-form-group">
+                <label>Maximum Stock Level</label>
+                <input
+                  type="number"
+                  name="maxStockLevel"
+                  value={formData.maxStockLevel}
+                  onChange={handleChange}
+                  placeholder="Enter Maximum Stock Level"
+                />
+              </div>
+              <div className="addproduct-form-group">
+                <label>Minimum Stock Level</label>
+                <input
+                  type="number"
+                  name="minStockLevel"
+                  value={formData.minStockLevel}
+                  onChange={handleChange}
+                  placeholder="Enter Minimum Stock Level"
                 />
               </div>
             </>

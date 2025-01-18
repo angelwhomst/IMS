@@ -194,6 +194,7 @@ async def receive_variants(payload: VariantPayload):
         if conn:
             await conn.close()
 
+# for receive orders
 
 '''
 for dropdown logic from the frontend

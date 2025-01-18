@@ -63,12 +63,23 @@ const MensLeatherShoes = () => {
           throw new Error("Failed to fetch products");
         }
         const data = await response.json();
-        setProducts(data);
+
+        // Remove duplicates based on productName, productDescription, and unitPrice
+        const uniqueProducts = data.filter((product, index, self) => 
+          index === self.findIndex((p) => (
+            p.productName === product.productName &&
+            p.productDescription === product.productDescription &&
+            p.unitPrice === product.unitPrice
+          ))
+        );
+
+        setProducts(uniqueProducts);
       } catch (error) {
         console.error(error);
         setError("Could not fetch products. Please try again later.");
       }
     };
+
     fetchProducts();
   }, []);
 

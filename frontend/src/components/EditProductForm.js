@@ -94,6 +94,7 @@ const EditProductForm = ({ product, category, onClose }) => {
   };
 
   const handleAddSize = () => {
+    console.log("Opening Add Size Modal"); // Debug log for opening Add Size modal
     setAddSizeModalOpen(true); // Open AddSizeModal
   };
 
@@ -196,8 +197,12 @@ const EditProductForm = ({ product, category, onClose }) => {
       {/* Add Size Modal */}
       {isAddSizeModalOpen && (
         <AddSizeModal
-          onClose={() => setAddSizeModalOpen(false)} // Close modal on close
+          onClose={() => {
+            console.log("Closing Add Size Modal"); // Debug log for closing Add Size modal
+            setAddSizeModalOpen(false); // Close modal on close
+          }}
           onSave={(newSize) => {
+            console.log("Saving New Size:", newSize); // Debug log when new size is saved
             setSize((prevSize) => [...prevSize, newSize]); // Add the new size
             setAddSizeModalOpen(false); // Close the modal after saving
           }}
@@ -205,6 +210,7 @@ const EditProductForm = ({ product, category, onClose }) => {
           productDescription={productData.productDescription}
           unitPrice={productData.unitPrice}
           category="men"  
+          image_path
         />
       )}
     </div>

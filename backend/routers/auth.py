@@ -28,7 +28,10 @@ class User(BaseModel):
 
 
 class UserInDB(User):
+<<<<<<< HEAD
     userID: int
+=======
+>>>>>>> IMS-DASH/master
     hashed_password: str
 
 # set passowrd hashing
@@ -38,18 +41,30 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 async def get_user_from_db(username: str):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
+<<<<<<< HEAD
     await cursor.execute('''SELECT userID, username, userPassword, userRole, isDisabled 
                             FROM users WHERE username = ?''', (username,))
+=======
+    await cursor.execute('''SELECT username, userPassword, userRole, isDisabled 
+                         FROM users WHERE username = ?''', (username,))
+>>>>>>> IMS-DASH/master
     user_row = await cursor.fetchone()
     await conn.close()
     
     if user_row:
         return UserInDB(
+<<<<<<< HEAD
             userID=user_row[0],
             username=user_row[1],
             hashed_password=user_row[2],
             userRole=user_row[3],
             disabled=user_row[4] == 1
+=======
+            username=user_row[0],
+            hashed_password=user_row[1],
+            userRole=user_row[2],
+            disabled=user_row[3] == 1
+>>>>>>> IMS-DASH/master
         )
     return None
 

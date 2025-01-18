@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState } from "react";
+=======
+import React, { useState, useEffect } from "react";
+>>>>>>> IMS-DASH/master
 import "./GirlsLeatherShoes.css"; // Create separate styles for Girl'sLeatherShoes
 import AddProductForm from "./AddProductForm";
 import EditProductForm from "./EditProductForm"; 
@@ -8,7 +12,12 @@ const GirlsLeatherShoes = () => {
   const [products, setProducts] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+<<<<<<< HEAD
   const [productToEdit, setProductToEdit] = useState(null); 
+=======
+  const [productToEdit, setProductToEdit] = useState(null);
+  const [error, setError] = useState(null); // State for error handling
+>>>>>>> IMS-DASH/master
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -29,8 +38,31 @@ const GirlsLeatherShoes = () => {
     closeDeleteModal();
   };
 
+<<<<<<< HEAD
   const openEditProduct = (product) => setProductToEdit(product); 
   const closeEditProduct = () => setProductToEdit(null); 
+=======
+  const openEditProduct = (product) => setProductToEdit(product);
+  const closeEditProduct = () => setProductToEdit(null);
+
+  // Fetch products from the API when the component mounts
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("/ims/products/Girls-Leather-Shoes");
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const data = await response.json();
+        setProducts(data); // Update state with the fetched products
+      } catch (error) {
+        console.error(error);
+        setError("Could not fetch products. Please try again later.");
+      }
+    };
+    fetchProducts();
+  }, []); // Empty dependency array ensures this runs once when the component mounts
+>>>>>>> IMS-DASH/master
 
   return (
     <div className="girls-catalog-products-container">
@@ -39,12 +71,17 @@ const GirlsLeatherShoes = () => {
         Add Product
       </button>
 
+<<<<<<< HEAD
+=======
+      {/* AddProductForm Modal */}
+>>>>>>> IMS-DASH/master
       <AddProductForm
         isOpen={isModalOpen}
         onClose={closeModal}
         onSubmit={addProduct}
       />
 
+<<<<<<< HEAD
       <div className="girls-catalog-products-grid">
         {products.map((product, index) => (
           <div key={index} className="girls-catalog-product-card">
@@ -57,12 +94,34 @@ const GirlsLeatherShoes = () => {
               <h3>{product.productName}</h3>
               <p>{product.description}</p>
               <p>Price: {product.price}</p>
+=======
+      {/* Error Handling UI */}
+      {error && <div className="error-message">{error}</div>}
+
+      <div className="girls-catalog-products-grid">
+        {/* Mapping through products to display in grid */}
+        {products.map((product, index) => (
+          <div key={index} className="girls-catalog-product-card">
+            <img
+              src={product.image_path} // Assuming the API response includes image_path
+              alt={product.productName}
+              onClick={() => openEditProduct(product)} // Open the EditProductForm on click
+            />
+            <div className="girls-catalog-product-info">
+              <h3>{product.productName}</h3>
+              <p>{product.productDescription}</p>
+              <p>Price: ${product.unitPrice}</p> {/* Assuming unitPrice is numeric */}
+>>>>>>> IMS-DASH/master
             </div>
             <div className="girls-catalog-product-actions">
               <button
                 className="girls-catalog-delete-btn"
                 onClick={(e) => {
+<<<<<<< HEAD
                   e.stopPropagation(); 
+=======
+                  e.stopPropagation(); // Prevent card click
+>>>>>>> IMS-DASH/master
                   openDeleteModal(product);
                 }}
               >
@@ -73,6 +132,7 @@ const GirlsLeatherShoes = () => {
         ))}
       </div>
 
+<<<<<<< HEAD
       {productToEdit && (
         <EditProductForm
           product={productToEdit} 
@@ -80,6 +140,17 @@ const GirlsLeatherShoes = () => {
         />
       )}
 
+=======
+      {/* EditProductForm Modal */}
+      {productToEdit && (
+        <EditProductForm
+          product={productToEdit} // Pass the product to EditProductForm
+          onClose={closeEditProduct} // Close the form
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+>>>>>>> IMS-DASH/master
       {isDeleteModalOpen && (
         <div className="girls-catalog-modal-overlay">
           <div className="girls-catalog-modal-content">

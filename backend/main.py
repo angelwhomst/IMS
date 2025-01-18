@@ -21,13 +21,24 @@ app.add_middleware(
     allow_origins=origins,
 )
 
+<<<<<<< HEAD
+=======
+# Mount the frontend folder if needed (for serving static files)
+# app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/images_upload", StaticFiles(directory="images_upload"), name="images")
+
+>>>>>>> IMS-DASH/master
 # Include routers for the various APIs
 app.include_router(inventory.router, prefix='/ims', tags=['inventory'])
 app.include_router(auth.router, prefix='/auth', tags=['auth'])
 app.include_router(purchase_order.router, prefix='/purchase-order', tags=['purchase-order'])
 app.include_router(employee_accounts.router, prefix='/employees', tags=['employee-accounts'])
 app.include_router(receive_orders.router, prefix='/receive-orders', tags=['receive-orders'])
+<<<<<<< HEAD
 app.include_router(sales.router, prefix='/employee-sales', tags=['employee sales'])
+=======
+app.include_router(sales.router, prefix='/sales', tags=['sales'])
+>>>>>>> IMS-DASH/master
 
 # Health check endpoint
 @app.get("/health", tags=["health"])

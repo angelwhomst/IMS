@@ -15,7 +15,11 @@ const Login = ({ onLogin, onRoleSelect }) => {
       const response = await fetch('http://127.0.0.1:8000/auth/token', {
         method: 'POST',
         headers: {
+<<<<<<< HEAD
           'Content-Type': 'application/x-www-form-urlencoded', 
+=======
+          'Content-Type': 'application/x-www-form-urlencoded', // Ensuring correct Content-Type
+>>>>>>> IMS-DASH/master
         },
         body: new URLSearchParams({
           username: username,

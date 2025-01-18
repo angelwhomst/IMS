@@ -15,7 +15,11 @@ VMS_BASE_URL = 'http://127.0.0.1:8001'
 # pydantic model for purchase order
 class PurchaseOrder(BaseModel):
     productID: int
+<<<<<<< HEAD
     productName: str 
+=======
+    productName: str
+>>>>>>> IMS-DASH/master
     productDescription: str
     size: str
     color: str
@@ -173,6 +177,12 @@ WHERE P.productID = ? AND P.isActive = 1;
         if conn:  # check if conn is not None before closing  
             await conn.close() 
 
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> IMS-DASH/master
 def convert_decimal_to_json_compatible(data):
     if isinstance(data, dict):
         return {key: convert_decimal_to_json_compatible(value) for key, value in data.items()}

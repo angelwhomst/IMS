@@ -162,5 +162,9 @@ const NavBar = ({ onLogout }) => {
   );
 };
 
+<<<<<<< HEAD
 export default NavBar;
  
+=======
+export default NavBar;
+>>>>>>> IMS-DASH/master

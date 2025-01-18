@@ -1,4 +1,8 @@
 from fastapi import APIRouter, HTTPException
+<<<<<<< HEAD
+=======
+from fastapi import File, UploadFile
+>>>>>>> IMS-DASH/master
 from pydantic import BaseModel
 import httpx
 import random
@@ -7,6 +11,11 @@ import os
 import base64
 from typing import Optional
 import database
+<<<<<<< HEAD
+=======
+import logging
+from fastapi.staticfiles import StaticFiles
+>>>>>>> IMS-DASH/master
 from routers.auth import get_current_active_user
 
 # Directory for saving uploaded images
@@ -69,7 +78,11 @@ class Product(BaseModel):
     minStockLevel: int = 0
     maxStockLevel: int = 0
     quantity: int = 1  # number of variants to add
+<<<<<<< HEAD
     image: str  # Base64 image string
+=======
+    image: Optional[str] = None  # Base64 image string
+>>>>>>> IMS-DASH/master
 
 # pydantic model for adding quantities to an existing product
 class AddQuantity(BaseModel):
@@ -92,6 +105,60 @@ class ProductVariant(BaseModel):
     isWrongItem: bool = False
     isReturned: bool = False
 
+<<<<<<< HEAD
+=======
+class ProductQueryParams(BaseModel):
+    productName: str
+    productDescription: str
+    unitPrice: float
+    category: str
+
+class ProductVariantResponse(BaseModel):
+    size: str
+    productCode: str
+    barcode: str
+
+class ProductUpdate(BaseModel):
+    productName: str
+    productDescription: str
+    size: str
+    category: str
+    unitPrice: float
+    newSize: str  # Add this field for the updated size
+    minStockLevel: int
+    maxStockLevel: int
+    reorderLevel: int
+    threshold: int
+
+    class Config:
+        orm_mode = True
+
+class ProductUpdates(BaseModel):
+    productName: str  # Current product name
+    productDescription: str  # Current product description
+    category: str  # Current category
+    unitPrice: float  # Current unit price
+    newProductName: str  # New product name
+    newProductDescription: str  # New product description
+    newCategory: str  # New category
+    newUnitPrice: float  # New unit price
+    newImage: str  # New image URL or path
+
+class ADDSIZE(BaseModel):
+    productName: str
+    productDescription: str
+    size: str
+    category: str
+    unitPrice: float
+    threshold: int
+    reorderLevel: int
+    minStockLevel: int
+    maxStockLevel: int
+    quantity: int
+    image: str  = None
+
+
+>>>>>>> IMS-DASH/master
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
     async with httpx.AsyncClient() as client:
@@ -172,6 +239,294 @@ async def add_product(product: Product):
     finally:
         await conn.close()
 
+<<<<<<< HEAD
+=======
+
+@router.put('/products/update')
+async def update_product(productData: ProductUpdate):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    
+    try:
+        # Step 1: Select the productID based on the given fields
+        await cursor.execute('''SELECT productID, productName, productDescription, size, category, 
+                                        unitPrice, minStockLevel, maxStockLevel, reorderLevel, threshold 
+                                 FROM Products
+                                 WHERE productName = ? AND productDescription = ? AND size = ? AND 
+                                       category = ? AND unitPrice = ? AND isActive = 1''',
+                             productData.productName,
+                             productData.productDescription,
+                             productData.size,
+                             productData.category,
+                             float(productData.unitPrice))
+        
+        product_row = await cursor.fetchone()
+
+        if not product_row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
+                       f"size '{productData.size}', category '{productData.category}', and unit price '{productData.unitPrice}' not found."
+            )
+        
+        # Extract the product ID
+        product_id = product_row[0]
+
+        # Debug: Output existing details
+        print("Product ID:", product_id)
+
+        # Step 2: Update the specific fields
+        await cursor.execute('''UPDATE Products
+                                 SET size = ?, minStockLevel = ?, maxStockLevel = ?, 
+                                     reorderLevel = ?, threshold = ?
+                                 WHERE productID = ? AND isActive = 1''',
+                             productData.newSize,
+                             productData.minStockLevel,
+                             productData.maxStockLevel,
+                             productData.reorderLevel,
+                             productData.threshold,
+                             product_id)
+        await conn.commit()
+
+        # Debug: Verify the update
+        print(f"Product with ID {product_id} updated successfully.")
+
+        # Step 3: Return success message with updated data (optional)
+        return {"message": f"Product with ID {product_id} updated successfully.",
+                "updated_product": {
+                    "productID": product_id,
+                    "newSize": productData.newSize,
+                    "minStockLevel": productData.minStockLevel,
+                    "maxStockLevel": productData.maxStockLevel,
+                    "reorderLevel": productData.reorderLevel,
+                    "threshold": productData.threshold
+                }}
+
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+        
+#add size
+@router.post('/products_AddSize')
+async def add_product(product: ADDSIZE):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try:
+        # Step 1: Check if the product with the same name, description, and size already exists
+        await cursor.execute('''SELECT 1
+                                 FROM Products
+                                 WHERE productName = ? 
+                                       AND productDescription = ? 
+                                       AND size = ? 
+                                       AND isActive = 1''',
+                             product.productName,
+                             product.productDescription,
+                             product.size)
+        
+        existing_product = await cursor.fetchone()
+
+        if existing_product:
+            raise HTTPException(status_code=400, 
+                                detail=f"A product with name '{product.productName}', description '{product.productDescription}', "
+                                       f"and size '{product.size}' already exists and is active.")
+        
+        # Step 2: Save Base64 image to file (if applicable)
+        image_path = None
+        if product.image:
+            image_path = save_base64_image(product.image)
+
+        # Step 3: Insert the new product, allowing different sizes for the same product name and category
+        await cursor.execute('''INSERT INTO Products (
+                                productName, productDescription, size, category,  
+                                unitPrice, threshold, reorderLevel, minStockLevel, maxStockLevel, currentStock, image_path)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);''',
+                             product.productName,
+                             product.productDescription,
+                             product.size,
+                             product.category,
+                             float(product.unitPrice),  
+                             product.threshold,
+                             product.reorderLevel,
+                             product.minStockLevel,
+                             product.maxStockLevel,
+                             product.quantity,
+                             image_path)  # Will be None if no image provided
+        await conn.commit()
+
+        # Step 4: Retrieve the last inserted productID using SQL Server's TOP 1 with ORDER BY
+        await cursor.execute('''SELECT TOP 1 productID 
+                                 FROM Products 
+                                 ORDER BY productID DESC''')
+        product_id_row = await cursor.fetchone()
+        product_id = product_id_row[0] if product_id_row else None
+
+        if not product_id:
+            raise HTTPException(status_code=500, detail='Failed to retrieve productID after insertion')
+
+        # Step 5: Insert multiple variants/quantity into the productVariants table
+        variants_data = [
+            (generate_barcode(), generate_sku(), product_id)
+            for _ in range(product.quantity)
+        ]
+        
+        await cursor.executemany('''INSERT INTO ProductVariants (barcode, productCode, productID)
+                                      VALUES (?, ?, ?);''', variants_data)
+        await conn.commit()
+
+        # Step 6: Trigger the stock webhook with the unitPrice converted to float
+        await trigger_stock_webhook(product_id, float(product.unitPrice))
+
+        return {'message': f'Product {product.productName} added with {product.quantity} variants.'}
+    
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    finally:
+        await conn.close()
+
+@router.get('/products/size')
+async def get_size(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
+    conn = await database.get_db_connection()
+    try:
+        async with conn.cursor() as cursor:
+            # SQL query to fetch all sizes with the same field names used in the frontend code
+            await cursor.execute(''' 
+                SELECT size, currentStock AS quantity, minStockLevel AS minQuantity, maxStockLevel AS maxQuantity, reorderLevel AS reorderQuantity, threshold AS threshold
+                FROM Products 
+                WHERE productName = ? 
+                AND unitPrice = ? 
+                AND category = ?
+                AND (productDescription = ? OR ? IS NULL)
+            ''', (productName, unitPrice, category, productDescription, productDescription))
+            
+            products = await cursor.fetchall()
+
+            if products:
+                # Map the query results to a list of dictionaries with the field names used in the frontend
+                size_list = [
+                    {"size": product[0], "quantity": product[1], "minQuantity": product[2], "maxQuantity": product[3], "reorderQuantity": product[4], "threshold": product[5]}
+                    for product in products
+                ]
+                return {"size": size_list}  # Return an array of size objects
+            else:
+                raise HTTPException(status_code=404, detail="Product not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+@router.get('/products/size_variants', response_model=list[ProductVariantResponse])
+async def get_size_variants(
+    productName: str,
+    unitPrice: float,
+    category: str,
+    productDescription: Optional[str] = None,
+):
+    conn = await database.get_db_connection()
+    try:
+        async with conn.cursor() as cursor:
+            # Updated query to use the category parameter
+            await cursor.execute(''' 
+                SELECT 
+                    p.size,
+                    pv.productCode,
+                    pv.barcode
+                FROM 
+                    Products AS p
+                INNER JOIN 
+                    ProductVariants AS pv
+                ON 
+                    p.productID = pv.productID
+                WHERE 
+                    p.isActive = 1 
+                    AND pv.isAvailable = 1 
+                    AND p.productName = ?
+                    AND (p.productDescription = ? OR ? IS NULL)
+                    AND p.unitPrice = ?
+                    AND p.category = ?;  
+            ''', (productName, productDescription, productDescription, unitPrice, category))
+
+            variants = await cursor.fetchall()
+            if variants:
+                variant_list = [
+                    {"size": variant[0], "productCode": variant[1], "barcode": variant[2]}
+                    for variant in variants
+                ]
+                return variant_list
+            else:
+                raise HTTPException(status_code=404, detail="No matching product variants found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+#update Product Details such as name, description, unitPrice, category and image
+@router.put('/products/update/name/description/size/category/image')
+async def update_product(productData: ProductUpdates):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try:
+        # Step 1: Select the productID based on the given fields
+        await cursor.execute('''SELECT productID, productName, productDescription, category, unitPrice, image_path
+                                 FROM Products
+                                 WHERE productName = ? AND productDescription = ? AND category = ? AND unitPrice = ? AND isActive = 1''',
+                             productData.productName,
+                             productData.productDescription,
+                             productData.category,
+                             float(productData.unitPrice))
+        
+        product_row = await cursor.fetchone()
+
+        if not product_row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
+                       f"category '{productData.category}', and unit price '{productData.unitPrice}' not found."
+            )
+        
+        # Extract the product ID
+        product_id = product_row[0]
+
+        # Step 2: Update the specific fields
+        await cursor.execute('''UPDATE Products
+                                 SET productName = ?, productDescription = ?, category = ?, unitPrice = ?, image_path = ?
+                                 WHERE productID = ? AND isActive = 1''',
+                             productData.newProductName,  # New product name
+                             productData.newProductDescription,  # New product description
+                             productData.newCategory,  # New category
+                             productData.newUnitPrice,  # New unit price
+                             productData.newImage,  # New image_path
+                             product_id)  # Using the product ID to locate the record
+        await conn.commit()
+
+        # Fetch the updated product
+        await cursor.execute('''SELECT productName, productDescription, category, unitPrice, image_path
+                                 FROM Products
+                                 WHERE productID = ?''', (product_id,))
+        updated_product = await cursor.fetchone()
+
+        return {
+            "message": "Product updated successfully.",
+            "product": {
+                "productName": updated_product[0],
+                "productDescription": updated_product[1],
+                "category": updated_product[2],
+                "unitPrice": updated_product[3],
+                "image_path": updated_product[4],
+            }
+        }
+
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+
+>>>>>>> IMS-DASH/master
 # add quantities to an existing products
 @router.post('/products/add-quantity')
 async def add_product_quantity(product: AddQuantity):
@@ -235,6 +590,7 @@ async def get_products():
     try: 
         async with conn.cursor() as cursor:
             await cursor.execute('''
+<<<<<<< HEAD
 select p.productName, p.productDescription,
 p.size, p.color, p.unitPrice, p.warehouseID,
 count(pv.variantID) as 'available quantity', p.currentStock,
@@ -244,6 +600,21 @@ left join ProductVariants as pv
 on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1
 group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
+=======
+SELECT p.productName, p.productDescription,
+       p.size, p.unitPrice, 
+       COUNT(pv.variantID) AS 'available quantity', p.currentStock,
+       p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold,
+       CAST(p.image_path AS VARCHAR(MAX)) AS image_path
+FROM products AS p
+LEFT JOIN ProductVariants AS pv
+ON p.productID = pv.productID
+WHERE p.isActive = 1 AND pv.isAvailable = 1
+GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
+         p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
+         CAST(p.image_path AS VARCHAR(MAX));
+
+>>>>>>> IMS-DASH/master
 ''')
             products = await cursor.fetchall()
             # map column names to row values
@@ -259,6 +630,7 @@ async def get_womens_products():
     cursor = await conn.cursor()
     try: 
         await cursor.execute(
+<<<<<<< HEAD
             '''select p.productName, p.productDescription, p.category,
 p.size, p.color, p.unitPrice, p.warehouseID,
 count(pv.variantID) as 'available quantity', p.currentStock,
@@ -269,6 +641,21 @@ on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Women''s Leather Shoes'
 group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
 '''
+=======
+            '''SELECT p.productName, p.productDescription,
+       p.size, p.unitPrice, CAST(p.image_path AS VARCHAR(MAX)) AS image_path,
+       COUNT(pv.variantID) AS 'available quantity', p.currentStock,
+       p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
+FROM products AS p
+LEFT JOIN ProductVariants AS pv
+  ON p.productID = pv.productID
+WHERE p.isActive = 1 
+  AND pv.isAvailable = 1
+  AND p.category = 'Women'  
+GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
+         p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
+         CAST(p.image_path AS VARCHAR(MAX));'''
+>>>>>>> IMS-DASH/master
         )
         products = await cursor.fetchall()
         # map column names to row values
@@ -279,6 +666,7 @@ group by p.productName, p.productDescription, p.category, p.size, p.color, p.uni
 # get all Mens products
 @router.get("/products/Mens-Leather-Shoes")
 async def get_mens_products():
+<<<<<<< HEAD
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
     try: 
@@ -298,6 +686,34 @@ group by p.productName, p.productDescription, p.category, p.size, p.color, p.uni
         # map column names to row values
         return [dict(zip([column[0] for column in cursor.description], row)) for row in products]
     finally: 
+=======
+    logging.info("Received request for Men's Leather Shoes products")
+    
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try:
+        
+        await cursor.execute(
+            '''SELECT p.productName, p.productDescription,
+       p.size, p.unitPrice, CAST(p.image_path AS VARCHAR(MAX)) AS image_path,
+       COUNT(pv.variantID) AS 'available quantity', p.currentStock,
+       p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
+FROM products AS p
+LEFT JOIN ProductVariants AS pv
+  ON p.productID = pv.productID
+WHERE p.isActive = 1 
+  AND pv.isAvailable = 1
+  AND p.category = 'men'  -- Escaped apostrophe
+GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
+         p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
+         CAST(p.image_path AS VARCHAR(MAX));'''
+        )
+        products = await cursor.fetchall()
+        
+        # Map column names to row values
+        return [dict(zip([column[0] for column in cursor.description], row)) for row in products]
+    finally:
+>>>>>>> IMS-DASH/master
         await conn.close()
 
 # get all boy's leather shoes
@@ -307,6 +723,7 @@ async def get_boys_products():
     cursor = await conn.cursor()
     try: 
         await cursor.execute(
+<<<<<<< HEAD
             '''select p.productName, p.productDescription, p.category,
 p.size, p.color, p.unitPrice, p.warehouseID,
 count(pv.variantID) as 'available quantity', p.currentStock,
@@ -317,6 +734,21 @@ on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Boy''s Leather Shoes'
 group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
 '''
+=======
+            '''SELECT p.productName, p.productDescription,
+       p.size, p.unitPrice, CAST(p.image_path AS VARCHAR(MAX)) AS image_path,
+       COUNT(pv.variantID) AS 'available quantity', p.currentStock,
+       p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
+FROM products AS p
+LEFT JOIN ProductVariants AS pv
+  ON p.productID = pv.productID
+WHERE p.isActive = 1 
+  AND pv.isAvailable = 1
+  AND p.category = 'Boys' 
+GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
+         p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
+         CAST(p.image_path AS VARCHAR(MAX));'''
+>>>>>>> IMS-DASH/master
 )
         products = await cursor.fetchall()
         # map column names to row values
@@ -331,6 +763,7 @@ async def get_girls_products():
     cursor = await conn.cursor()
     try: 
         await cursor.execute(
+<<<<<<< HEAD
             '''select p.productName, p.productDescription, p.category,
 p.size, p.color, p.unitPrice, p.warehouseID,
 count(pv.variantID) as 'available quantity', p.currentStock,
@@ -341,6 +774,21 @@ on p.productID = pv.productID
 where p.isActive = 1 and pv.isAvailable =1  and p.category = 'Girl''s Leather Shoes'
 group by p.productName, p.productDescription, p.category, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock
 '''
+=======
+            '''SELECT p.productName, p.productDescription,
+       p.size, p.unitPrice, CAST(p.image_path AS VARCHAR(MAX)) AS image_path,
+       COUNT(pv.variantID) AS 'available quantity', p.currentStock,
+       p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
+FROM products AS p
+LEFT JOIN ProductVariants AS pv
+  ON p.productID = pv.productID
+WHERE p.isActive = 1 
+  AND pv.isAvailable = 1
+  AND p.category = 'Girls'
+GROUP BY p.productName, p.productDescription, p.size, p.unitPrice,
+         p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.currentStock, p.threshold,
+         CAST(p.image_path AS VARCHAR(MAX));'''
+>>>>>>> IMS-DASH/master
 )
         products = await cursor.fetchall()
         # map column names to row values
@@ -349,13 +797,17 @@ group by p.productName, p.productDescription, p.category, p.size, p.color, p.uni
         await conn.close()
 
 
+<<<<<<< HEAD
 
 # get one product
+=======
+>>>>>>> IMS-DASH/master
 @router.get('/products/{product_id}')
 async def get_product(product_id: int):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
     try:
+<<<<<<< HEAD
         await cursor.execute('''select p.productName, p.productDescription,
 p.size, p.color, p.unitPrice, 
 p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.warehouseID,
@@ -369,6 +821,30 @@ group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.wa
         if not product:
             raise HTTPException(status_code=404, detail='product not found')
         return dict(zip([column[0] for column in cursor.description], product))
+=======
+        # Modify the query with proper tuple for product_id
+        await cursor.execute('''select p.productName, p.productDescription,
+        p.size, p.unitPrice, CAST(p.image_path AS VARCHAR(MAX)) AS image_path,
+        count(pv.variantID) as 'available quantity'
+        from products as p
+        left join ProductVariants as pv
+        on p.productID = pv.productID
+        where p.productID = ? and p.isActive = 1 and pv.isAvailable = 1
+        group by p.productName, p.productDescription, p.size, p.unitPrice, p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold, CAST(p.image_path AS VARCHAR(MAX));
+
+		;''', (product_id,))
+        
+        # Fetch one product (could be fetchall() depending on use case)
+        product = await cursor.fetchone()
+        print(product)  # Debugging
+
+        if not product:
+            raise HTTPException(status_code=404, detail='Product not found')
+        
+        # Returning product data
+        return dict(zip([column[0] for column in cursor.description], product))
+
+>>>>>>> IMS-DASH/master
     finally:
         await conn.close()
 
@@ -460,7 +936,11 @@ where productID = ? ''',
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()
+<<<<<<< HEAD
 
+=======
+       
+>>>>>>> IMS-DASH/master
 # delete a product
 @router.delete('/products/{product_id}')
 async def delete_product(product_id: int):
@@ -524,4 +1004,8 @@ async def delete_product_variant(variant_id: int):
         await conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
+<<<<<<< HEAD
         await conn.close()
+=======
+        await conn.close()
+>>>>>>> IMS-DASH/master

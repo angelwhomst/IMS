@@ -106,6 +106,18 @@
   transition: background-color 0.2s;
 }
 
+<<<<<<< HEAD
+=======
+.mens-catalog-edit-btn{
+  background-color: #fe3835;
+  color: white;
+}
+
+.mens-catalog-edit-btn:hover {
+  background-color: #d92f2c;
+}
+
+>>>>>>> IMS-DASH/master
 /* Delete Button */
 .mens-catalog-delete-btn {
   background-color: #fe3835;

@@ -41,6 +41,7 @@ h2 {
   letter-spacing: 0.5px;
 }
 
+<<<<<<< HEAD
 /* Close Button */
 .close-btn {
   position: absolute;
@@ -163,6 +164,8 @@ h2 {
 }
 
 
+=======
+>>>>>>> IMS-DASH/master
 
 /* Size Container */
 .size-container {
@@ -208,6 +211,7 @@ h2 {
   background-color: #f40b37;
 }
 
+<<<<<<< HEAD
 /* Error Modal */
 .error-modal-overlay {
   position: fixed;
@@ -255,6 +259,8 @@ h2 {
 .error-modal-content .submit-btn:hover {
   background-color: #d01f2b;
 }
+=======
+>>>>>>> IMS-DASH/master
 
 /* Card Styling */
 .card {
@@ -419,6 +425,17 @@ h2 {
   background-color: #9e0202;
 }
 
+<<<<<<< HEAD
+=======
+.size-details p {
+  margin-bottom: 8px; /* Add margin to paragraphs for spacing */
+}
+
+.spacing {
+  margin: 30px 0; /* Add space between sections */
+}
+
+>>>>>>> IMS-DASH/master
 .close-button {
   background: none;
   width: 80px;
@@ -451,19 +468,33 @@ h2 {
   object-fit: cover; /* Ensure the image covers the container */
 }
 
+<<<<<<< HEAD
 .barcode-table {
+=======
+.table-section {
+>>>>>>> IMS-DASH/master
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
 
+<<<<<<< HEAD
 .barcode-table th, .barcode-table td {
   border: 1px solid #ddd;
+=======
+.table-section th, .table-sectione td {
+  border: 1px solid #ff2828;
+>>>>>>> IMS-DASH/master
   padding: 8px;
   text-align: left;
 }
 
+<<<<<<< HEAD
 .barcode-table th {
   background-color: #f2f2f2;
+=======
+.table-section th {
+  background-color: #f86b6b;
+>>>>>>> IMS-DASH/master
   font-weight: bold;
 }

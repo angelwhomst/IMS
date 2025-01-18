@@ -21,7 +21,11 @@ class VariantPayload(BaseModel):
     variants: List[ProductVariant]
 
 
+<<<<<<< HEAD
 @router.post("/ims/orders/confirm")
+=======
+@router.post("ims/orders/confirm")
+>>>>>>> IMS-DASH/master
 async def update_order_status(payload: dict):
     conn = None
     try:
@@ -194,6 +198,7 @@ async def receive_variants(payload: VariantPayload):
         if conn:
             await conn.close()
 
+<<<<<<< HEAD
 
 '''
 for dropdown logic from the frontend
@@ -243,3 +248,5 @@ async def get_orders_by_status(status: str):
     
     orders_data = await fetch_orders(order_status=status)  
     return {f"{status} orders": orders_data}
+=======
+>>>>>>> IMS-DASH/master

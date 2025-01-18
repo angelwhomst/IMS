@@ -21,7 +21,7 @@ class VariantPayload(BaseModel):
     variants: List[ProductVariant]
 
 
-@router.post("ims/orders/confirm")
+@router.post("/ims/orders/confirm")
 async def update_order_status(payload: dict):
     conn = None
     try:
@@ -194,3 +194,52 @@ async def receive_variants(payload: VariantPayload):
         if conn:
             await conn.close()
 
+
+'''
+for dropdown logic from the frontend
+'''
+# function to fetch orders based on status  
+async def fetch_orders(order_status=None):  
+    conn = await database.get_db_connection()  
+    cursor = await conn.cursor()  
+    
+    try:  
+        if order_status:  
+            await cursor.execute(f"exec get_orders_by_status @orderStatus = '{order_status}'")  
+        else:  
+            await cursor.execute('exec get_all_orderStatus')  
+
+        orders_row = await cursor.fetchall()  
+        orders_data = [  
+            {  
+                "Product Name": row[0],  
+                "Category": row[1],  
+                "Size": row[2],  
+                "Quantity": row[3],  
+                "Total Price": row[4],  
+                "Date": row[5].strftime("%m-%d-%Y %I:%M %p"),  
+                "Status": row[6],
+            }  
+            for row in orders_row  
+        ]  
+        return orders_data  
+    except Exception as e:  
+        raise HTTPException(status_code=500, detail=str(e))  
+    finally:  
+        await conn.close()  
+
+# Display all order status  
+@router.get('/all-orders')  
+async def get_all_orders():  
+    orders_data = await fetch_orders()  
+    return {"All order status": orders_data}  
+
+# Display orders by status  
+@router.get('/{status}-orders')  
+async def get_orders_by_status(status: str):  
+    valid_statuses = ['Pending', 'Confirmed', 'Rejected', 'To Ship', 'Delivered']  
+    if status not in valid_statuses:  
+        raise HTTPException(status_code=400, detail="Invalid order status")  
+    
+    orders_data = await fetch_orders(order_status=status)  
+    return {f"{status} orders": orders_data}

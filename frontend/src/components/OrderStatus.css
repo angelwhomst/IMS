@@ -49,18 +49,32 @@
     font-weight: bold;
   }
   
-  /* Unique colors for each status */
-  .order-status.shipped {
-    color: #4caf50; /* Green for Shipped */
-  }
-  
-  .order-status.to-shipped {
-    color: #fe9c35; /* Orange for To Shipped */
-  }
-  
-  .order-status.received {
-    color: #2196f3; /* Blue for Received */
-  }
+  /* Style for specific order statuses */
+.order-status.pending {
+  color: #ffa500; /* Orange for Pending */
+}
+
+.order-status.confirmed {
+  color: #4caf50; /* Green for Confirmed */
+}
+
+.order-status.rejected {
+  color: #ff0000; /* Red for Rejected */
+}
+
+.order-status.to-ship {
+  color: #ff9800; /* Deep Orange for To Ship */
+}
+
+.order-status.delivered {
+  color: #3f51b5; /* Blue for Delivered */
+}
+
+/* Ensure 'All' maintains a neutral color */
+.order-status.all {
+  color: #000; /* Black for All */
+}
+
   
   .card {
     width: 100%;

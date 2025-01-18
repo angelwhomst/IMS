@@ -15,7 +15,7 @@ VMS_BASE_URL = 'http://127.0.0.1:8001'
 # pydantic model for purchase order
 class PurchaseOrder(BaseModel):
     productID: int
-    productName: str
+    productName: str 
     productDescription: str
     size: str
     color: str
@@ -172,9 +172,6 @@ WHERE P.productID = ? AND P.isActive = 1;
     finally:
         if conn:  # check if conn is not None before closing  
             await conn.close() 
-
-
-
 
 def convert_decimal_to_json_compatible(data):
     if isinstance(data, dict):

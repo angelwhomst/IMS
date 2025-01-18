@@ -201,6 +201,10 @@ const EditProductForm = ({ product, category, onClose }) => {
             setSize((prevSize) => [...prevSize, newSize]); // Add the new size
             setAddSizeModalOpen(false); // Close the modal after saving
           }}
+          productName={productData.productName}
+          productDescription={productData.productDescription}
+          unitPrice={productData.unitPrice}
+          category="men"  
         />
       )}
     </div>

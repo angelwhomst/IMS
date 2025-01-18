@@ -9,12 +9,14 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
     reorderLevel: '',
     maxQuantity: '',
     minQuantity: '',
+    quantity: '',
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
 
+  // Form validation function
   const validateForm = () => {
     const errors = {};
     if (!formData.size) errors.size = "Size is required.";
@@ -26,15 +28,19 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
       errors.maxQuantity = "Maximum Quantity should be a positive number.";
     if (!formData.minQuantity || isNaN(formData.minQuantity) || formData.minQuantity <= 0) 
       errors.minQuantity = "Minimum Stock Level should be a positive number.";
+    if (!formData.quantity || isNaN(formData.quantity) || formData.quantity <= 0) 
+      errors.quantity = "Quantity should be a positive number."; 
 
     return errors;
   };
 
+  // Handle form data changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle form submission
   const handleSave = async () => {
     setLoading(true);
     setError(null);
@@ -51,17 +57,21 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
         productDescription,
         size: formData.size,
         category,
-        unitPrice,
+        unitPrice: parseFloat(unitPrice),
         minStockLevel: parseInt(formData.minQuantity),
         maxStockLevel: parseInt(formData.maxQuantity),
         reorderLevel: parseInt(formData.reorderLevel),
         threshold: parseInt(formData.threshold),
+        quantity: parseInt(formData.quantity),
       };
 
-      const response = await axios.post("/ims/products/add", payload);
+      // Make POST request to the backend
+      const response = await axios.post("/ims/products_AddSize", payload);
       console.log(response.data.message);
-      onSave(formData);  // Update parent state if needed
-      setFormData({ size: '', threshold: '', reorderLevel: '', maxQuantity: '', minQuantity: '' });  // Reset form
+
+      // Update parent state if needed and reset the form
+      onSave(formData);
+      setFormData({ size: '', threshold: '', reorderLevel: '', maxQuantity: '', minQuantity: '', quantity: '' });
       onClose();
     } catch (err) {
       console.error("Error adding new product size:", err.response?.data?.detail || err.message);
@@ -78,6 +88,7 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
         <h2 className="addproduct-h2">Add Size</h2>
         {error && <p className="error-message">{error}</p>}
         <form>
+          {/* Size Input */}
           <div className="addproduct-form-group">
             <label>Size</label>
             <input
@@ -90,18 +101,7 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
             {formErrors.size && <p className="error-message">{formErrors.size}</p>}
           </div>
 
-          <div className="addproduct-form-group">
-            <label>Quantity</label>
-            <input
-              type="text"
-              name="size"
-              value={formData.size}
-              onChange={handleChange}
-              required
-            />
-            {formErrors.size && <p className="error-message">{formErrors.size}</p>}
-          </div>
-
+          {/* Threshold Input */}
           <div className="addproduct-form-group">
             <label>Threshold</label>
             <input
@@ -114,6 +114,7 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
             {formErrors.threshold && <p className="error-message">{formErrors.threshold}</p>}
           </div>
 
+          {/* Reorder Level Input */}
           <div className="addproduct-form-group">
             <label>Reorder Level</label>
             <input
@@ -126,6 +127,7 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
             {formErrors.reorderLevel && <p className="error-message">{formErrors.reorderLevel}</p>}
           </div>
 
+          {/* Maximum Quantity Input */}
           <div className="addproduct-form-group">
             <label>Maximum Quantity</label>
             <input
@@ -138,6 +140,7 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
             {formErrors.maxQuantity && <p className="error-message">{formErrors.maxQuantity}</p>}
           </div>
 
+          {/* Minimum Quantity Input */}
           <div className="addproduct-form-group">
             <label>Minimum Stock Level</label>
             <input
@@ -150,9 +153,23 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
             {formErrors.minQuantity && <p className="error-message">{formErrors.minQuantity}</p>}
           </div>
 
+          {/* Quantity Input */}
+          <div className="addproduct-form-group">
+            <label>Quantity</label>
+            <input
+              type="number"
+              name="quantity"
+              value={formData.quantity}
+              onChange={handleChange}
+              required
+            />
+            {formErrors.quantity && <p className="error-message">{formErrors.quantity}</p>}
+          </div>
+
+          {/* Submit Button */}
           <button
             type="button"
-            className="addsize-submit-btn "
+            className="addsize-submit-btn"
             onClick={handleSave}
             disabled={loading}
           >

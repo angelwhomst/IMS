@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from fastapi import File, UploadFile
 from pydantic import BaseModel
 import httpx
 import random
@@ -120,6 +121,30 @@ class ProductUpdate(BaseModel):
     class Config:
         orm_mode = True
 
+class ProductUpdates(BaseModel):
+    productName: str  # Current product name
+    productDescription: str  # Current product description
+    category: str  # Current category
+    unitPrice: float  # Current unit price
+    newProductName: str  # New product name
+    newProductDescription: str  # New product description
+    newCategory: str  # New category
+    newUnitPrice: float  # New unit price
+    newImage: str  # New image URL or path
+
+class ADDSIZE(BaseModel):
+    productName: str
+    productDescription: str
+    size: str
+    category: str
+    unitPrice: float
+    threshold: int
+    reorderLevel: int
+    minStockLevel: int
+    maxStockLevel: int
+    quantity: int
+    image: str  = None
+
 
 # function to trigger stock webhook
 async def trigger_stock_webhook(product_id: int, current_stock: int):
@@ -201,10 +226,12 @@ async def add_product(product: Product):
     finally:
         await conn.close()
 
+
 @router.put('/products/update')
 async def update_product(productData: ProductUpdate):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
+    
     try:
         # Step 1: Select the productID based on the given fields
         await cursor.execute('''SELECT productID, productName, productDescription, size, category, 
@@ -230,7 +257,7 @@ async def update_product(productData: ProductUpdate):
         # Extract the product ID
         product_id = product_row[0]
 
-        # Debug/Output existing details
+        # Debug: Output existing details
         print("Product ID:", product_id)
 
         # Step 2: Update the specific fields
@@ -249,12 +276,99 @@ async def update_product(productData: ProductUpdate):
         # Debug: Verify the update
         print(f"Product with ID {product_id} updated successfully.")
 
-        # Return success message
-        return {"message": f"Product with ID {product_id} updated successfully."}
+        # Step 3: Return success message with updated data (optional)
+        return {"message": f"Product with ID {product_id} updated successfully.",
+                "updated_product": {
+                    "productID": product_id,
+                    "newSize": productData.newSize,
+                    "minStockLevel": productData.minStockLevel,
+                    "maxStockLevel": productData.maxStockLevel,
+                    "reorderLevel": productData.reorderLevel,
+                    "threshold": productData.threshold
+                }}
 
     except Exception as e:
         await conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+        
+#add size
+@router.post('/products_AddSize')
+async def add_product(product: ADDSIZE):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try:
+        # Step 1: Check if the product with the same name, description, and size already exists
+        await cursor.execute('''SELECT 1
+                                 FROM Products
+                                 WHERE productName = ? 
+                                       AND productDescription = ? 
+                                       AND size = ? 
+                                       AND isActive = 1''',
+                             product.productName,
+                             product.productDescription,
+                             product.size)
+        
+        existing_product = await cursor.fetchone()
+
+        if existing_product:
+            raise HTTPException(status_code=400, 
+                                detail=f"A product with name '{product.productName}', description '{product.productDescription}', "
+                                       f"and size '{product.size}' already exists and is active.")
+        
+        # Step 2: Save Base64 image to file (if applicable)
+        image_path = None
+        if product.image:
+            image_path = save_base64_image(product.image)
+
+        # Step 3: Insert the new product, allowing different sizes for the same product name and category
+        await cursor.execute('''INSERT INTO Products (
+                                productName, productDescription, size, category,  
+                                unitPrice, threshold, reorderLevel, minStockLevel, maxStockLevel, currentStock, image_path)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);''',
+                             product.productName,
+                             product.productDescription,
+                             product.size,
+                             product.category,
+                             float(product.unitPrice),  
+                             product.threshold,
+                             product.reorderLevel,
+                             product.minStockLevel,
+                             product.maxStockLevel,
+                             product.quantity,
+                             image_path)  # Will be None if no image provided
+        await conn.commit()
+
+        # Step 4: Retrieve the last inserted productID using SQL Server's TOP 1 with ORDER BY
+        await cursor.execute('''SELECT TOP 1 productID 
+                                 FROM Products 
+                                 ORDER BY productID DESC''')
+        product_id_row = await cursor.fetchone()
+        product_id = product_id_row[0] if product_id_row else None
+
+        if not product_id:
+            raise HTTPException(status_code=500, detail='Failed to retrieve productID after insertion')
+
+        # Step 5: Insert multiple variants/quantity into the productVariants table
+        variants_data = [
+            (generate_barcode(), generate_sku(), product_id)
+            for _ in range(product.quantity)
+        ]
+        
+        await cursor.executemany('''INSERT INTO ProductVariants (barcode, productCode, productID)
+                                      VALUES (?, ?, ?);''', variants_data)
+        await conn.commit()
+
+        # Step 6: Trigger the stock webhook with the unitPrice converted to float
+        await trigger_stock_webhook(product_id, float(product.unitPrice))
+
+        return {'message': f'Product {product.productName} added with {product.quantity} variants.'}
+    
+    except Exception as e:
+        await conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    
     finally:
         await conn.close()
 
@@ -330,6 +444,68 @@ async def get_size_variants(
             else:
                 raise HTTPException(status_code=404, detail="No matching product variants found")
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+
+#update Product Details such as name, description, unitPrice, category and image
+@router.put('/products/update/name/description/size/category/image')
+async def update_product(productData: ProductUpdates):
+    conn = await database.get_db_connection()
+    cursor = await conn.cursor()
+    try:
+        # Step 1: Select the productID based on the given fields
+        await cursor.execute('''SELECT productID, productName, productDescription, category, unitPrice, image_path
+                                 FROM Products
+                                 WHERE productName = ? AND productDescription = ? AND category = ? AND unitPrice = ? AND isActive = 1''',
+                             productData.productName,
+                             productData.productDescription,
+                             productData.category,
+                             float(productData.unitPrice))
+        
+        product_row = await cursor.fetchone()
+
+        if not product_row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Product with name '{productData.productName}', description '{productData.productDescription}', "
+                       f"category '{productData.category}', and unit price '{productData.unitPrice}' not found."
+            )
+        
+        # Extract the product ID
+        product_id = product_row[0]
+
+        # Step 2: Update the specific fields
+        await cursor.execute('''UPDATE Products
+                                 SET productName = ?, productDescription = ?, category = ?, unitPrice = ?, image_path = ?
+                                 WHERE productID = ? AND isActive = 1''',
+                             productData.newProductName,  # New product name
+                             productData.newProductDescription,  # New product description
+                             productData.newCategory,  # New category
+                             productData.newUnitPrice,  # New unit price
+                             productData.newImage,  # New image_path
+                             product_id)  # Using the product ID to locate the record
+        await conn.commit()
+
+        # Fetch the updated product
+        await cursor.execute('''SELECT productName, productDescription, category, unitPrice, image_path
+                                 FROM Products
+                                 WHERE productID = ?''', (product_id,))
+        updated_product = await cursor.fetchone()
+
+        return {
+            "message": "Product updated successfully.",
+            "product": {
+                "productName": updated_product[0],
+                "productDescription": updated_product[1],
+                "category": updated_product[2],
+                "unitPrice": updated_product[3],
+                "image_path": updated_product[4],
+            }
+        }
+
+    except Exception as e:
+        await conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await conn.close()

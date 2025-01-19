@@ -142,7 +142,7 @@ class ADDSIZE(BaseModel):
     minStockLevel: int
     maxStockLevel: int
     quantity: int
-    image: str  = None
+    image: str  
 
 
 # function to trigger stock webhook
@@ -385,7 +385,7 @@ async def add_size(product: ADDSIZE):
             for _ in range(product.quantity)
         ]
         await cursor.executemany(
-            '''INSERT INTO ProductVariants (barcode, productCode productID)
+            '''INSERT INTO ProductVariants (barcode, productCode, productID)
             values (?, ?, ?);''', variants_data )
         await conn.commit()
 
@@ -404,37 +404,29 @@ async def add_size(product: ADDSIZE):
 @router.get('/products/sizes')
 async def get_size(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
     conn = await database.get_db_connection()
-    cursor = await conn.cursor()
-
     try:
-        await cursor.execute
-        (
-            '''SELECT size, currentStock AS quantity, minStockLevel AS minQuantity, maxStockLevel AS maxQuantity, reorderLevel AS reorderQuantity, threshold AS threshold
-                FROM Products
-                WHERE productName = ?
-                AND unitPrice = ?
+        async with conn.cursor() as cursor:
+            # SQL query to fetch all sizes with the same field names used in the frontend code
+            await cursor.execute(''' 
+                SELECT size, currentStock AS quantity, minStockLevel AS minQuantity, maxStockLevel AS maxQuantity, reorderLevel AS reorderQuantity, threshold AS threshold
+                FROM Products 
+                WHERE productName = ? 
+                AND unitPrice = ? 
                 AND category = ?
-                AND (productDescription = ? OR ? IS NULL)''',
-                (productName, unitPrice, category, productDescription, productDescription)
-        )
-        products = await cursor.fetchall()
+                AND (productDescription = ? OR ? IS NULL)
+            ''', (productName, unitPrice, category, productDescription, productDescription))
+            
+            products = await cursor.fetchall()
 
-        if products:
-            # map the query results to a list of dictionaries with the field names used in the frontend
-            size_list = [
-                {
-                    "size": product[0],
-                    "quantity": product[1],
-                    "minQuantity": product[2],
-                    "maxQuantity": product[3],
-                    "reorderQuantity": product[4],
-                    "threshold": product[5]
-                }
-                for product in products
-            ]
-            return {"size": size_list}
-        else:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            if products:
+                # Map the query results to a list of dictionaries with the field names used in the frontend
+                size_list = [
+                    {"size": product[0], "quantity": product[1], "minQuantity": product[2], "maxQuantity": product[3], "reorderQuantity": product[4], "threshold": product[5]}
+                    for product in products
+                ]
+                return {"size": size_list}  
+            else:
+                raise HTTPException(status_code=404, detail="Product not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -443,9 +435,11 @@ async def get_size(productName: str, unitPrice: float, category: str, productDes
 @router.get('/products/size_variants', response_model=list[ProductVariantResponse])
 async def get_size_variants(productName: str, unitPrice: float, category: str, productDescription: Optional[str] = None):
     conn = await database.get_db_connection()
-    cursor = await conn.cursor()
+    #cursor = await conn.cursor()
 
     try:
+     async with conn.cursor() as cursor:
+
         await cursor.execute(
             '''SELECT p.size, pv.productCode, pv.barcode
                 FROM
@@ -589,12 +583,14 @@ group by p.productName, p.productDescription, p.category, p.size, p.unitPrice, p
 # get all Mens products
 @router.get("/products/Mens-Leather-Shoes")
 async def get_mens_products():
+    logging.info("Received request for Men's Leather Shoes products")
+
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
     try: 
         await cursor.execute(
             '''select p.productName, p.productDescription, p.category,
-p.size, p.unitPrice, cast(p.image_path as varchar(max)),
+p.size, p.unitPrice, cast(p.image_path as varchar(max)) AS image_path,
 count(pv.variantID) as 'available quantity', p.currentStock,
 p.reorderLevel, p.minStockLevel, p.maxStockLevel, p.threshold
 from products as p

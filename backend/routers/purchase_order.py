@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel 
 import httpx
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 from typing import Optional, List
 from decimal import Decimal
 import database
@@ -18,7 +18,7 @@ class PurchaseOrder(BaseModel):
     productName: str 
     productDescription: str
     size: str
-    color: str
+    color: Optional[str] = 'Black'
     category: str
     quantity: int
     warehouseID: int
@@ -173,6 +173,7 @@ WHERE P.productID = ? AND P.isActive = 1;
         if conn:  # check if conn is not None before closing  
             await conn.close() 
 
+
 def convert_decimal_to_json_compatible(data):
     if isinstance(data, dict):
         return {key: convert_decimal_to_json_compatible(value) for key, value in data.items()}
@@ -180,6 +181,10 @@ def convert_decimal_to_json_compatible(data):
         return [convert_decimal_to_json_compatible(item) for item in data]
     elif isinstance(data, Decimal):
         return float(data)  # Or str(data) if you prefer strings for decimals
+    elif isinstance(data, datetime):  # If it's a datetime object
+        return data.strftime('%Y-%m-%dT%H:%M:%S')  # Format with date and time
+    # elif isinstance(data, date):  # If it's a date object
+    #     return data.strftime('%Y-%m-%d')  # Return just the date in YYYY-MM-DD format
     return data
 
 
@@ -188,141 +193,104 @@ def convert_decimal_to_json_compatible(data):
 async def create_purchase_order(payload: dict):
     try:
         # extract payload fields
-        productID = payload.get('productID')
-        quantity = payload.get('quantity')
-        warehouseID = payload.get('warehouseID')
-        category = payload.get('category')
+        productName = payload.get('productName')
         size = payload.get('size')
-        color = payload.get('color') 
+        category = payload.get('category')
+        quantity = payload.get('quantity')
+        warehouseName = payload.get('warehouseName')
+        building = payload.get('building')
+        street = payload.get('street')
+        barangay = payload.get('barangay')
+        city = payload.get('city')
+        country = payload.get('country')
+        zipcode = payload.get('zipcode')
         userID = payload.get('userID')
 
         # validate the payload 
-        if not productID or not quantity or not warehouseID:
-            raise HTTPException(status_code=400, detail="invalid payload. missing required fields")
+        if not productName or not size or not category or not quantity or not warehouseName:
+            raise HTTPException(status_code=400, detail="Invalid payload. Missing required fields.")
         
         conn = await database.get_db_connection()
         cursor = await conn.cursor()
 
-        # check product and warehouse
-        await cursor.execute('''
-        SELECT 
-            P.productID, P.productName, P.productDescription, P.size, P.color, P.category, 
-            W.warehouseName, 
-            (ISNULL(W.building, '') + ', ' + ISNULL(W.street, '') + ', ' + ISNULL(W.barangay, '') + ', ' + 
-             ISNULL(W.city, '') + ', ' + ISNULL(W.country, '') + ', ' + ISNULL(W.zipcode, '')) AS warehouseAddress
-        FROM 
-            Products P
-        INNER JOIN 
-            Warehouses W ON P.warehouseID = W.warehouseID
-        WHERE 
-            P.productID = ? AND P.warehouseID = ?
-            AND P.category = ? AND P.size = ? AND P.color = ?
-            AND P.isActive = 1''',
-            (productID, warehouseID,   category, size, color))
-        product = await cursor.fetchone()
+        # fetch color (use default value 'Black' if not provided)
+        color = 'Black'
 
-        if not product:
-            raise HTTPException(status_code=404, detail='Product not found or inactive.')
-        
-        productID, productName, productDescription, size, color, category, warehouseName, warehouseAddress = product
-
-        # select vendor
-        await cursor.execute('''
-        select top 1 vendorID, vendorName
-                             from vendors
-                             where isActive = 1
-                             ''')
-        vendor = await cursor.fetchone()
-        if not vendor:
-            raise HTTPException(status_code=404, detail="no active vendors available.")
-        
-        vendorID, vendorName = vendor
-
-        # fetch user details
+        # execute stored procedure 
         await cursor.execute(
-            '''select firstName, lastName
-            from Users
-            where userID = ?''', 
-            (userID,)
-        )
-        user = await cursor.fetchone()
-        if not user:
-            raise HTTPException(status_code=404, detail='user not found.')
-        
-        firstName, lastName =user
-
-        # identify product variant to connect to hte right productID
-        await cursor.execute(
-            '''select variantID
-        FROM ProductVariants
-        WHERE productID = ? AND isAvailable = 1
-        ''', (productID,))
-        variant = await cursor.fetchone()
-        if not variant:
-            raise HTTPException(status_code=404, detail="no available product variant found")
-        variantID = variant[0]
-
-        # prepare dynamic dates 
-        orderDate = datetime.now().date().isoformat()
-        expectedDate = (datetime.now() + timedelta(days=7)).date().isoformat()
-
-        # insert into PurchaseOrders table
-        await cursor.execute(
-            '''INSERT INTO PurchaseOrders (orderDate, orderStatus, statusDate, vendorID, userID)
-            OUTPUT INSERTED.orderID
-            VALUES (?, ?, ?, ?, ?)
-            ''',
-            (orderDate, "Pending", datetime.utcnow(), vendorID, userID)
+            "EXEC CreatePurchaseOrder ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?",
+            (productName, size, category, quantity, warehouseName, building, street, barangay, city, country, zipcode, userID)
         )
         order = await cursor.fetchone()
-        orderID = order[0] if order else None
 
-        if not orderID:
-            raise HTTPException(status_code=500, detail="Failed to create purchase order.")
+
+        if not order:
+            raise HTTPException(status_code=404, detail='Failed to create purchase order')
         
-        # insert into PurchaseORderDetails table
-        await cursor.execute(
-            '''insert into PurchaseOrderDetails (orderQuantity, expectedDate, warehouseID, orderID, variantID)
-            values (?, ?, ?, ?, ?)
-            ''',
-            (quantity, expectedDate, warehouseID, orderID, variantID)
-        )
-        await conn.commit()
+        orderID = order[0]
 
-        # prepare payload for vms
+        await conn.commit()
+        # Fetch order details for VMS
+        await cursor.execute('''
+            SELECT po.orderID, po.orderDate, v.vendorID, v.vendorName, 
+                   w.warehouseID, w.warehouseName, w.building, w.street, 
+                   w.barangay, w.city, w.country, w.zipcode, 
+                   p.productID, p.productName, p.productDescription, p.size, p.color, p.category,
+                   pod.orderQuantity, pod.expectedDate, u.userID, u.firstName, u.lastName
+            FROM PurchaseOrders po
+            JOIN Vendors v ON po.vendorID = v.vendorID
+            JOIN PurchaseOrderDetails pod ON po.orderID = pod.orderID
+            JOIN Warehouses w ON pod.warehouseID = w.warehouseID
+            JOIN ProductVariants pv ON pod.variantID = pv.variantID
+            JOIN Products p ON pv.productID = p.productID
+            JOIN Users u ON po.userID = u.userID
+            WHERE po.orderID = ?;
+        ''', (orderID,))
+
+        order_details = await cursor.fetchone()
+
+        if not order_details:
+            raise HTTPException(status_code=404, detail="Order details not found.")
+
+        (orderID, orderDate, vendorID, vendorName, warehouseID, warehouseName, building, street, 
+         barangay, city, country, zipcode, productID, productName, productDescription, size, color, category,
+         quantity, expectedDate, userID, firstName, lastName) = order_details
+
+        # Prepare payload for VMS
         po_payload = {
             "orderID": orderID,
             "productID": productID,
             "productName": productName,
             "productDescription": productDescription,
             "size": size,
-            "color": color,
+            "color": 'Black',
             "category": category,
             "quantity": quantity,
             "warehouseID": warehouseID,
             "warehouseName": warehouseName,
-            "warehouseAddress": warehouseAddress,
+            "warehouseAddress": f"{building}, {street}, {barangay}, {city}, {country}, {zipcode}",
             "vendorID": vendorID,
             "vendorName": vendorName,
             "orderDate": orderDate,
             "expectedDate": expectedDate,
             "userID": userID,
             "userName": f"{firstName} {lastName}",
-            "variantID": variantID
         }
 
         po_payload = convert_decimal_to_json_compatible(po_payload)
 
-        # send PO to VMS
+        # Send PO to VMS
         response = await send_order_to_vms(po_payload)
 
         return {
-            "message": "Purchase order manually created and sent to VMS.",
+            "message": "Purchase order successfully created and sent to VMS.",
             "payload": po_payload,
             "response": response,
         }
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating purchase order: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating purchase order: {str(e)}")
+
     finally:
         await conn.close()
 

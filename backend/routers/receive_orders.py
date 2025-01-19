@@ -20,6 +20,9 @@ class VariantPayload(BaseModel):
     orderID: int
     variants: List[ProductVariant]
 
+class OrderID(BaseModel):
+    order_id: int
+
 
 @router.post("/ims/orders/confirm")
 async def update_order_status(payload: dict):
@@ -193,6 +196,116 @@ async def receive_variants(payload: VariantPayload):
     finally:
         if conn:
             await conn.close()
+
+# Get all the order in delivered status
+@router.get('/ims/variants/delivered')
+async def get_delivered_orders():
+    conn = None
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+
+        # SQL query to fetch only orders with the status 'Delivered'
+        await cursor.execute(
+            '''
+            SELECT p.productName, p.category, p.size, 
+                   pod.orderQuantity,
+                   FORMAT((pod.orderQuantity * p.unitPrice), 'N', 'en-US') AS [total price],
+                   po.statusDate, po.orderStatus
+            FROM PurchaseOrders AS po
+            LEFT JOIN PurchaseOrderDetails AS pod ON po.orderID = pod.orderID
+            LEFT JOIN productVariants pv ON pod.variantid = pv.variantid
+            LEFT JOIN Products p ON pv.productid = p.productid
+            WHERE po.orderStatus = 'Delivered'  -- Filtering for delivered orders only
+            ORDER BY po.orderDate DESC
+            '''
+        )
+
+        delivered_orders_row = await cursor.fetchall()
+
+        if not delivered_orders_row:
+            raise HTTPException(status_code=404, detail="No delivered orders found.")
+
+        # Prepare the response data with the necessary fields
+        delivered_orders = [
+            {
+                "product_name": row[0],
+                "category": row[1],
+                "size": row[2],
+                "quantity": row[3],
+                "total_price": row[4],
+                "status_date": row[5].strftime("%m-%d-%Y %I:%M %p"),
+                "order_status": row[6]
+            }
+            for row in delivered_orders_row
+        ]
+
+        return {"delivered_orders": delivered_orders}
+
+    except HTTPException as e:
+        logging.error(f"HTTP error occurred: {e.status_code} - {e.detail}")
+        raise
+    except Exception as e:
+        logging.error(f"Unexpected error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while fetching delivered orders.")
+    finally:
+        if conn:
+            await conn.close()
+
+
+
+#Received
+@router.post("/ims/variants/mark-received")
+async def mark_variants_received(order: OrderID):
+    order_id = order.order_id
+    conn = None
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+
+        # Check if order exists and is marked as Delivered
+        await cursor.execute(
+            '''
+            SELECT orderStatus 
+            FROM purchaseOrders
+            WHERE orderID = ?
+            ''',
+            (order_id,)
+        )
+        order_status_row = await cursor.fetchone()
+
+        if not order_status_row:
+            raise HTTPException(status_code=404, detail=f"Order with ID {order_id} not found.")
+
+        order_status = order_status_row[0]
+        if order_status != "Delivered":
+            raise HTTPException(status_code=400, detail=f"Order is not in 'Delivered' status. Current status: {order_status}")
+
+        # Update orderStatus to Received
+        logging.info(f"Updating order status to 'Received' for orderID: {order_id}")
+        await cursor.execute(
+            '''
+            UPDATE purchaseOrders
+            SET orderStatus = 'Received'
+            WHERE orderID = ?
+            ''',
+            (order_id,)
+        )
+        await conn.commit()
+
+        return {"message": f"Order {order_id} marked as 'Received' successfully.", "status": "success"}
+    
+    except HTTPException as e:
+        logging.error(f"HTTP error occurred: {e.status_code} - {e.detail}")
+        raise
+    except Exception as e:
+        logging.error(f"Unexpected error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while marking the order as 'Received'.")
+    finally:
+        if conn:
+            await conn.close()
+
+
 
 # for receive orders
 

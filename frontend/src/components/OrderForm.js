@@ -14,8 +14,8 @@ const OrderForm = () => {
     const [email, setEmail] = useState('');
     const [showSavedAddressModal, setShowSavedAddressModal] = useState(false);
     const [showAddNewAddressModal, setShowAddNewAddressModal] = useState(false);
-    const [imageSrc, setImageSrc] = useState('/path/to/placeholder-image.jpg'); // Placeholder image path
-
+    const [imageSrc, setImageSrc] = useState('../assets/IMS_FINAL_LOGO.jpg'); // Placeholder image path
+    
     const handleQuantityChange = (e) => {
         const value = Math.max(1, e.target.value); // Ensure quantity doesn't go below 1
         setQuantity(value);

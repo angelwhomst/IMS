@@ -1,13 +1,15 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel 
 import httpx
 from datetime import datetime, date, timedelta
 from typing import Optional, List
 from decimal import Decimal
-import database
 import logging
+import database
+from routers.auth import role_required
 
-router = APIRouter()
+
+router = APIRouter(dependencies=[Depends(role_required(["admin"]))])
 
 # base url for vms api
 VMS_BASE_URL = 'http://127.0.0.1:8001'
@@ -173,20 +175,16 @@ WHERE P.productID = ? AND P.isActive = 1;
         if conn:  # check if conn is not None before closing  
             await conn.close() 
 
-
 def convert_decimal_to_json_compatible(data):
     if isinstance(data, dict):
         return {key: convert_decimal_to_json_compatible(value) for key, value in data.items()}
     elif isinstance(data, list):
         return [convert_decimal_to_json_compatible(item) for item in data]
     elif isinstance(data, Decimal):
-        return float(data)  # Or str(data) if you prefer strings for decimals
-    elif isinstance(data, datetime):  # If it's a datetime object
-        return data.strftime('%Y-%m-%dT%H:%M:%S')  # Format with date and time
-    # elif isinstance(data, date):  # If it's a date object
-    #     return data.strftime('%Y-%m-%d')  # Return just the date in YYYY-MM-DD format
+        return float(data)  
+    elif isinstance(data, datetime):  
+        data.strftime('%Y-%m-%d %H:%M:%S')
     return data
-
 
 # manual endpoint to create PO
 @router.post('/create-purchase-order')
@@ -230,7 +228,7 @@ async def create_purchase_order(payload: dict):
         orderID = order[0]
 
         await conn.commit()
-        # Fetch order details for VMS
+        # fetch order details for VMS
         await cursor.execute('''
             SELECT po.orderID, po.orderDate, v.vendorID, v.vendorName, 
                    w.warehouseID, w.warehouseName, w.building, w.street, 
@@ -255,8 +253,12 @@ async def create_purchase_order(payload: dict):
         (orderID, orderDate, vendorID, vendorName, warehouseID, warehouseName, building, street, 
          barangay, city, country, zipcode, productID, productName, productDescription, size, color, category,
          quantity, expectedDate, userID, firstName, lastName) = order_details
+        
+         # convert datetime values before JSON serialization
+        orderDate = orderDate.strftime('%Y-%m-%d %H:%M:%S') if isinstance(orderDate, datetime) else orderDate
+        expectedDate = expectedDate.strftime('%Y-%m-%d %H:%M:%S') if isinstance(expectedDate, datetime) else expectedDate    
 
-        # Prepare payload for VMS
+        # prepare payload for VMS
         po_payload = {
             "orderID": orderID,
             "productID": productID,
@@ -301,59 +303,7 @@ async def get_purchase_orders():
         conn = await database.get_db_connection()
         cursor = await conn.cursor()
         await cursor.execute(
-            '''select 
-    po.orderid,
-    po.orderdate,
-    po.orderstatus,
-    po.statusdate,
-    
-    -- vendor details
-    v.vendorid,
-    v.vendorname,
-    (isnull(v.building, '') + ', ' + isnull(v.street, '') + ', ' + isnull(v.barangay, '') + ', ' + 
-     isnull(v.city, '') + ', ' + isnull(v.country, '') + ', ' + isnull(v.zipcode, '')) as vendoraddress,
-    
-    -- user details
-    u.userid,
-    concat(u.firstname, ' ', u.lastname) as orderedby,
-    
-    -- purchase order details
-    pod.orderdetailid,
-    pod.orderquantity,
-    pod.expecteddate,
-    pod.actualdate,
-    
-    -- product details
-    p.productid,
-    p.productname,
-    p.productdescription,
-    p.size,
-    p.color,
-    p.category,
-
-    -- warehouse details
-    w.warehouseid,
-    w.warehousename,
-    (isnull(w.building, '') + ', ' + isnull(w.street, '') + ', ' + isnull(w.barangay, '') + ', ' + 
-     isnull(w.city, '') + ', ' + isnull(w.country, '') + ', ' + isnull(w.zipcode, '')) as warehouseaddress
-
-from 
-    purchaseorders po
-left join 
-    vendors v on po.vendorid = v.vendorid
-left join 
-    users u on po.userid = u.userid
-left join 
-    purchaseorderdetails pod on po.orderid = pod.orderid
-left join 
-    warehouses w on pod.warehouseid = w.warehouseid
-left join 
-    productvariants pv on pod.variantid = pv.variantid
-left join 
-    products p on pv.productid = p.productid
-
-order by 
-    po.orderdate desc;'''
+            ''''''
         )
         rows = await cursor.fetchall()
 
@@ -366,5 +316,102 @@ order by
         return purchase_orders
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"error fetching purchase orders: {e}")
+    finally:
+        await conn.close()
+
+
+@router.get('product-names')
+async def get_product_names():
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+        await cursor.execute(
+            '''SELECT distinct productName FROM Products WHERE isActive = 1;'''
+        )
+        rows = await cursor.fetchall()
+
+        return [row[0] for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"error fetching product names: {e}")
+    finally:
+        await conn.close()
+
+
+@router.get("/get-product-details/{product_name}")
+async def get_product_details(product_name: str):
+    """
+    Fetch product details (productID, category) based on the given product name.
+    """
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+
+        query = """
+            SELECT productID, productName, category 
+            FROM Products 
+            WHERE productName = ? AND isActive = 1;
+        """
+        await cursor.execute(query, (product_name,))
+        row = await cursor.fetchone()
+
+        if row:
+            return {
+                "productID": row[0],
+                "productName": row[1],
+                "category": row[2]
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching product details: {e}")
+
+    finally:
+        await conn.close()
+
+
+@router.get('/get-product-sizes/{product_name}')
+async def get_product_sizes(product_name: str):
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+
+        await cursor.execute("EXEC GetProductSizes ?", (product_name,))
+        sizes = await cursor.fetchall()
+
+        return {"sizes": [size[0] for size in sizes]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching product sizes: {str(e)}")
+    finally:
+        await conn.close()
+
+# for warehouse address
+@router.get('/warehouse-address')
+async def get_warehouse_address():
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+        await cursor.execute('''SELECT warehouseName, building, street, barangay, city, country, zipcode
+                                FROM warehouses
+                                WHERE warehouseID = 1''')
+        warehouse = await cursor.fetchone()
+
+        # Check if a row was returned
+        if warehouse:
+            # Construct the response dictionary
+            response = {
+                "warehouseName": warehouse[0],
+                "building": warehouse[1],
+                "street": warehouse[2],
+                "barangay": warehouse[3],
+                "city": warehouse[4],
+                "country": warehouse[5],
+                "zipcode": warehouse[6]
+            }
+            return response
+        else:
+            raise HTTPException(status_code=404, detail="Warehouse not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching warehouse address: {e}")
     finally:
         await conn.close()

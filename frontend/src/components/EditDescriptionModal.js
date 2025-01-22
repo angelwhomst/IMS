@@ -1,101 +1,113 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import "./EditDescriptionModal.css";
+import React, { useState, useEffect } from "react";  
+import PropTypes from "prop-types";  
+import axios from "axios";  
+import "./EditDescriptionModal.css";  
 
-const EditDescriptionModal = ({
-  product = {},
-  productName,
-  productDescription,
-  unitPrice,
-  category,
-  onClose,
-  onSave,
-}) => {
-  const [editedProduct, setEditedProduct] = useState({
-    productName: product.productName || productName || "",
-    productDescription: product.productDescription || productDescription || "",
-    unitPrice: product.unitPrice || unitPrice || 0,
-    category: product.category || category || "", // Fallback to category from props if not in product
-    image: product.image_path || "",
-  });
+const EditDescriptionModal = ({  
+  product = {},  
+  productName,  
+  productDescription,  
+  unitPrice,  
+  category,  
+  onClose,  
+  onSave,  
+}) => {  
+  const [editedProduct, setEditedProduct] = useState({  
+    productName: product.productName || productName || "",  
+    productDescription: product.productDescription || productDescription || "",  
+    unitPrice: product.unitPrice || unitPrice || 0,  
+    category: product.category || category || "",  
+    image: product.image_path || "",  
+  });  
 
-  useEffect(() => {
-    console.log("Category received in useEffect:", category); // This works because 'category' is passed in props
-    console.log("Product category:", category); // 'product.category' might be undefined
-    setEditedProduct({
-      productName: product.productName || productName || "",
-      productDescription: product.productDescription || productDescription || "",
-      unitPrice: product.unitPrice || unitPrice || 0,
-      category: product.category || category || "", // Fallback to 'category' if 'product.category' is undefined
-      image: product.image_path || "",
-    });
-  }, [product, productName, productDescription, unitPrice, category]);
+  useEffect(() => {  
+    console.log("Category received in useEffect:", category);  
+    console.log("Product category:", product.category);  
+  
+    setEditedProduct({  
+      productName: product.productName || productName || "",  
+      productDescription: product.productDescription || productDescription || "",  
+      unitPrice: product.unitPrice || unitPrice || 0,  
+      category: product.category || category || "",  
+      image: product.image_path || "",  
+    });  
+  }, [product, productName, productDescription, unitPrice, category]);  
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedProduct((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
+  const handleInputChange = (e) => {  
+    const { name, value } = e.target;  
+    setEditedProduct((prevState) => ({  
+      ...prevState,  
+      [name]: value,  
+    }));  
+  };  
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditedProduct((prevState) => ({
-          ...prevState,
-          image: reader.result, // Store the Base64 string of the image
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const handleFileChange = (e) => {  
+    const file = e.target.files[0];  
+    if (file) {  
+      const reader = new FileReader();  
+      reader.onloadend = () => {  
+        setEditedProduct((prevState) => ({  
+          ...prevState,  
+          image: reader.result,  
+        }));  
+      };  
+      reader.readAsDataURL(file);  
+    }  
+  };  
 
-  const handleSave = async () => {
-    if (
-      !editedProduct.productName ||
-      !editedProduct.productDescription ||
-      !editedProduct.unitPrice ||
-      !editedProduct.category
-    ) {
-      alert("Please fill out all fields.");
-      return;
-    }
+  const handleSave = async () => {  
+    console.log("onSave prop:", onSave); // Debugging  
 
-    const updatedProduct = {
-      productName: product.productName,  // Current value, to be used as reference
-      productDescription: product.productDescription, // Current value, reference
-      category: category, // Current category
-      unitPrice: product.unitPrice,  // Current price
-      newProductName: editedProduct.productName.trim(),  // Trimmed input
-      newProductDescription: editedProduct.productDescription.trim(),  // Trimmed input
-      newCategory: editedProduct.category.trim(),  // Trimmed input
-      newUnitPrice: parseFloat(editedProduct.unitPrice),  // Parsed as number
-      newImage: editedProduct.image,  // Base64 encoded image
-    };
+    if (typeof onSave !== "function") {  
+      console.error("Error: onSave is not a function");  
+      alert("An error occurred: onSave is not a function.");  
+      return;  
+    }  
 
-    console.log("Payload:", updatedProduct);
+    if (  
+      !editedProduct.productName ||  
+      !editedProduct.productDescription ||  
+      !editedProduct.unitPrice ||  
+      !editedProduct.category  
+    ) {  
+      alert("Please fill out all fields.");  
+      return;  
+    }  
 
-    try {
-      const response = await axios.put(
-        `/ims/products/update-details`,
-        updatedProduct,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      console.log("Server Response:", response.data);
-      onSave(updatedProduct); 
-      onClose();
-    } catch (error) {
-      console.error("Error updating product:", error);
-      alert("An error occurred while updating the product.");
-    }
-  };
+    const updatedProduct = {  
+      productName: product.productName,  
+      productDescription: product.productDescription,  
+      category: category,  
+      unitPrice: product.unitPrice,  
+      newProductName: editedProduct.productName.trim(),  
+      newProductDescription: editedProduct.productDescription.trim(),  
+      newCategory: editedProduct.category.trim(),  
+      newUnitPrice: parseFloat(editedProduct.unitPrice),  
+      newImage: editedProduct.image,  
+    };  
+
+    console.log("Payload:", updatedProduct);  
+
+    try {  
+      const token = localStorage.getItem("access_token");  
+      if (!token) {  
+        throw new Error("Unauthorized: No access token found.");  
+      }  
+
+      const response = await axios.put(`/ims/products/update-details`, updatedProduct, {  
+        headers: {  
+          "Content-Type": "application/json",  
+          Authorization: `Bearer ${token}`, // Add the access token here  
+        },  
+      });  
+      console.log("Server Response:", response.data);  
+      onSave(updatedProduct);  
+      onClose();  
+    } catch (error) {  
+      console.error("Error updating product:", error);  
+      alert("An error occurred while updating the product.");  
+    }  
+  };  
 
   return (
     <div className="edit-description-modal-overlay">
@@ -158,6 +170,17 @@ const EditDescriptionModal = ({
       </div>
     </div>
   );
+};
+
+// Define PropTypes for type checking
+EditDescriptionModal.propTypes = {
+  product: PropTypes.object,
+  productName: PropTypes.string,
+  productDescription: PropTypes.string,
+  unitPrice: PropTypes.number,
+  category: PropTypes.string,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired, // Ensure onSave is a function
 };
 
 export default EditDescriptionModal;

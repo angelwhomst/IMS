@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile
+from fastapi import APIRouter, HTTPException, File, UploadFile, Depends
 from pydantic import BaseModel
 import httpx
 import random
@@ -9,7 +9,7 @@ from typing import Optional
 import logging
 from fastapi.staticfiles import StaticFiles 
 import database
-from routers.auth import get_current_active_user
+from routers.auth import role_required, get_current_active_user
 
 # Directory for saving uploaded images
 UPLOAD_DIRECTORY = "images_upload"
@@ -22,11 +22,11 @@ def generate_image_filename():
 # Function to decode Base64 image and save to file
 def save_base64_image(base64_image: str) -> str:
     try:
-        # Decode the Base64 string (ignore the data URI prefix if present)
+        # Decode the Base64 string
         if "," in base64_image:
             base64_image = base64_image.split(",")[1]
 
-        # Fix padding if it's incorrect
+        
         missing_padding = len(base64_image) % 4
         if missing_padding:
             base64_image += "=" * (4 - missing_padding)
@@ -52,7 +52,7 @@ def generate_sku():
     sku = ''.join(random.choices(characters, k=8))
     return sku
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(role_required(["admin"]))])
 
 # webhook url ---------------------
 
@@ -142,7 +142,7 @@ class ADDSIZE(BaseModel):
     minStockLevel: int
     maxStockLevel: int
     quantity: int
-    image: str  
+    image: str = None
 
 
 # function to trigger stock webhook
@@ -150,9 +150,9 @@ async def trigger_stock_webhook(product_id: int, current_stock: int):
     async with httpx.AsyncClient() as client:
         try:
             # Ensure currentStock is treated as an integer
-            payload = {"productID": product_id, "currentStock": int(current_stock)}  # Convert to int if necessary
+            payload = {"productID": product_id, "currentStock": int(current_stock)} 
             response = await client.post(STOCK_WEBHOOK_URL, json=payload)
-            response.raise_for_status()  # Ensure to check for successful status code
+            response.raise_for_status()  
         except Exception as e:
             print(f'Error sending stock webhook: {e}')
 

@@ -20,11 +20,11 @@ const Dashboard = () => {
         </div>
         <div className="dashboard-card">
           <h2 className="dashboard-summary-card-title">Revenue</h2>
-          <p>$10,000</p>
+          <p>₱10,000</p>
         </div>
       </section>
 
-      {/* Recent Activities Section */}
+    {/* Recent Activities Section
       <section className="dashboard-recent-activities">
         <h2>Recent Activities</h2>
         <ul>
@@ -50,7 +50,7 @@ const Dashboard = () => {
             </div>
           </li>
         </ul>
-      </section>
+      </section> *!/ */}
     </div>
   );
 };

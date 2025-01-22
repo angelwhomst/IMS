@@ -1,102 +1,107 @@
-import React, { useState, useEffect } from 'react';
-import './EditProductForm.css';
-import EditSizeModal from './EditSizeModal';
-import AddSizeModal from './AddSizeModal'; // Import the AddSizeModal component
+import React, { useState, useEffect } from 'react';  
+import axios from 'axios'; // Import Axios  
+import './EditProductForm.css';  
+import EditSizeModal from './EditSizeModal';  
+import AddSizeModal from './AddSizeModal'; // Import the AddSizeModal component  
 
-const EditProductForm = ({ product, category, onClose }) => {
-  const [productData, setProductData] = useState(product);
-  const [size, setSize] = useState([]);
-  const [sizeVariants, setSizeVariants] = useState([]);
-  const [selectedSizeDetails, setSelectedSizeDetails] = useState(null);
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [isAddSizeModalOpen, setAddSizeModalOpen] = useState(false); // Add state for AddSizeModal visibility
-  const [error, setError] = useState(null);
+const EditProductForm = ({ product, category, onClose }) => {  
+  const [productData, setProductData] = useState(product);  
+  const [size, setSize] = useState([]);  
+  const [sizeVariants, setSizeVariants] = useState([]);  
+  const [selectedSizeDetails, setSelectedSizeDetails] = useState(null);  
+  const [isEditModalOpen, setEditModalOpen] = useState(false);  
+  const [isAddSizeModalOpen, setAddSizeModalOpen] = useState(false); // Add state for AddSizeModal visibility  
+  const [error, setError] = useState(null);  
 
-  // Fetch sizes
-  useEffect(() => {
-    if (productData) {
-      const fetchSize = async () => {
-        try {
-          const categoryParam = category || 'Uncategorized';
-          const url = `/ims/products/sizes?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;
+  // Fetch sizes  
+  useEffect(() => {  
+    if (productData) {  
+      const fetchSize = async () => {  
+        try {  
+          const categoryParam = category || 'Uncategorized';  
+          const url = `/ims/products/sizes?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;  
+          
+          const token = localStorage.getItem("access_token"); // Retrieve the token  
 
-          const response = await fetch(url);
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data.size)) {
-              setSize(data.size);
-            } else {
-              setSize([]);
-              setError("Invalid size data received.");
-            }
-          } else {
-            setSize([]);
-            setError("Failed to fetch product size.");
-          }
-        } catch (error) {
-          setSize([]);
-          setError("An error occurred while fetching product size.");
-        }
-      };
-      fetchSize();
-    }
-  }, [productData, category]);
+          const response = await axios.get(url, {  
+            headers: {  
+              Authorization: `Bearer ${token}`, // Use the token in the request header  
+            },  
+          });  
 
-  // Fetch size variants
-  useEffect(() => {
-    if (productData) {
-      const fetchSizeVariants = async () => {
-        try {
-          const response = await fetch(
-            `/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&unitPrice=${productData.unitPrice}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`
-          );
+          if (response.status === 200 && Array.isArray(response.data.size)) {  
+            setSize(response.data.size);  
+          } else {  
+            setSize([]);  
+            setError("Invalid size data received.");  
+          }  
+        } catch (error) {  
+          setSize([]);  
+          setError("An error occurred while fetching product size.");  
+          console.error("Error fetching sizes:", error); // Debug log  
+        }  
+      };  
+      fetchSize();  
+    }  
+  }, [productData, category]);  
 
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data)) {
-              setSizeVariants(data);
-            } else {
-              setSizeVariants([]);
-            }
-          } else {
-            setSizeVariants([]);
-          }
-        } catch (error) {
-          setSizeVariants([]);
-        }
-      };
-      fetchSizeVariants();
-    }
-  }, [productData, category]);
+  // Fetch size variants  
+  useEffect(() => {  
+    if (productData) {  
+      const fetchSizeVariants = async () => {  
+        try {  
+          const token = localStorage.getItem("access_token"); // Retrieve the token  
+          const response = await axios.get(  
+            `/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&unitPrice=${productData.unitPrice}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`,  
+            {  
+              headers: {  
+                Authorization: `Bearer ${token}`, // Use the token in the request header  
+              },  
+            }  
+          );  
 
-  const handleSizeClick = (selectedSize) => {
-    setProductData((prevData) => ({
-      ...prevData,
-      selectedSize,
-    }));
+          if (response.status === 200 && Array.isArray(response.data)) {  
+            setSizeVariants(response.data);  
+          } else {  
+            setSizeVariants([]);  
+          }  
+        } catch (error) {  
+          setSizeVariants([]);  
+          console.error("Error fetching size variants:", error); // Debug log  
+        }  
+      };  
+      fetchSizeVariants();  
+    }  
+  }, [productData, category]);  
 
-    const sizeDetails = size.find((item) => item.size === selectedSize.size);
-    setSelectedSizeDetails(sizeDetails || null);
-  };
+  const handleSizeClick = (selectedSize) => {  
+    setProductData((prevData) => ({  
+      ...prevData,  
+      selectedSize,  
+    }));  
 
-  const handleDeleteSize = (sizeToDelete) => {
-    const updatedSize = size.filter((sizeItem) => sizeItem.size !== sizeToDelete.size);
-    setSize(updatedSize);
-    setSelectedSizeDetails(null); // Clear selected size details
-  };
+    const sizeDetails = size.find((item) => item.size === selectedSize.size);  
+    setSelectedSizeDetails(sizeDetails || null);  
+  };  
 
-  const handleSaveSize = (updatedSizeDetails) => {
-    const updatedSize = size.map((sizeItem) =>
-      sizeItem.size === selectedSizeDetails.size ? { ...sizeItem, ...updatedSizeDetails } : sizeItem
-    );
-    setSize(updatedSize);
-    setSelectedSizeDetails(updatedSizeDetails);
-  };
+  const handleDeleteSize = (sizeToDelete) => {  
+    const updatedSize = size.filter((sizeItem) => sizeItem.size !== sizeToDelete.size);  
+    setSize(updatedSize);  
+    setSelectedSizeDetails(null); // Clear selected size details  
+  };  
 
-  const handleAddSize = () => {
-    console.log("Opening Add Size Modal"); // Debug log for opening Add Size modal
-    setAddSizeModalOpen(true); // Open AddSizeModal
-  };
+  const handleSaveSize = (updatedSizeDetails) => {  
+    const updatedSize = size.map((sizeItem) =>  
+      sizeItem.size === selectedSizeDetails.size ? { ...sizeItem, ...updatedSizeDetails } : sizeItem  
+    );  
+    setSize(updatedSize);  
+    setSelectedSizeDetails(updatedSizeDetails);  
+  };  
+
+  const handleAddSize = () => {  
+    console.log("Opening Add Size Modal"); // Debug log for opening Add Size modal  
+    setAddSizeModalOpen(true); // Open AddSizeModal  
+  };  
 
   return (
     <div className="edit-product-form">

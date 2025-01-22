@@ -82,13 +82,6 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-
-# def get_user(fake_db, username: str):
-#     if username in fake_db:
-#         user_data = fake_db[username]
-#         return UserInDB(**user_data)
-
-
 # authenticate user based on usernamea nd pw
 async def authenticate_user(username: str, password: str):
     user = await get_user_from_db(username)

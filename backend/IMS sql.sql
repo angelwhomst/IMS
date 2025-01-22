@@ -94,7 +94,7 @@ begin
 create table PurchaseOrders
 (
 orderID numeric identity(1,1) constraint orderID_PK primary key,
-orderDate date,
+orderDate datetime2,
 orderStatus varchar (100),
 statusDate datetime2,
 vendorID numeric constraint vendorID_FK foreign key references vendors(vendorID),
@@ -109,7 +109,7 @@ create table PurchaseOrderDetails
 (
 orderDetailID numeric identity(1,1) constraint orderDetailID_PK primary key,
 orderQuantity numeric default 1,
-expectedDate date,
+expectedDate datetime2,
 actualDate datetime2,
 variantID numeric constraint variantID_FK_PO foreign key references productVariants(variantID),
 warehouseID numeric constraint warehouseID_FK_PO foreign key references warehouses(warehouseID),

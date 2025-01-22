@@ -1,88 +1,94 @@
-import React, { useState, useEffect } from "react";
-import "./MensLeatherShoes.css";
-import axios from "axios";
-import AddProductForm from "./AddProductForm";
-import EditProductForm from "./EditProductForm";
-import EditDescriptionModal from "./EditDescriptionModal";
+import React, { useState, useEffect } from "react";  
+import "./MensLeatherShoes.css";  
+import axios from "axios";  
+import AddProductForm from "./AddProductForm";  
+import EditProductForm from "./EditProductForm";  
+import EditDescriptionModal from "./EditDescriptionModal";  
 
-const MensLeatherShoes = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
-  const [productToEdit, setProductToEdit] = useState(null);
-  const [error, setError] = useState(null);
-  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [isProductFormOpen, setIsProductFormOpen] = useState(false);
+const MensLeatherShoes = () => {  
+  const [isModalOpen, setIsModalOpen] = useState(false);  
+  const [products, setProducts] = useState([]);  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);  
+  const [productToDelete, setProductToDelete] = useState(null);  
+  const [productToEdit, setProductToEdit] = useState(null);  
+  const [error, setError] = useState(null);  
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);  
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);  
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openModal = () => setIsModalOpen(true);  
+  const closeModal = () => setIsModalOpen(false);  
 
-  const addProduct = (product) => setProducts([...products, product]);
+  const addProduct = (product) => setProducts([...products, product]);  
 
-  const openDeleteModal = (product) => {
-    setProductToDelete(product);
-    setIsDeleteModalOpen(true);
-  };
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setProductToDelete(null);
-  };
+  const openDeleteModal = (product) => {  
+    setProductToDelete(product);  
+    setIsDeleteModalOpen(true);  
+  };  
+  const closeDeleteModal = () => {  
+    setIsDeleteModalOpen(false);  
+    setProductToDelete(null);  
+  };  
 
-  const deleteProduct = () => {
-    setProducts(products.filter((p) => p !== productToDelete));
-    closeDeleteModal();
-  };
+  const deleteProduct = () => {  
+    setProducts(products.filter((p) => p !== productToDelete));  
+    closeDeleteModal();  
+  };  
 
-  const openEditDescription = (product) => {
-    setProductToEdit({ product, category: "Men's Leather Shoes" });
-    setIsDescriptionModalOpen(true);
-    setIsProductFormOpen(false);
-  };
+  const openEditDescription = (product) => {  
+    setProductToEdit({ product, category: "Men's Leather Shoes" });  
+    setIsDescriptionModalOpen(true);  
+    setIsProductFormOpen(false);  
+  };  
 
-  const openEditProduct = (product) => {
-    setProductToEdit({ product, category: "Men's Leather Shoes" });
-    setIsProductFormOpen(true);
-    setIsDescriptionModalOpen(false);
-  };
+  const openEditProduct = (product) => {  
+    setProductToEdit({ product, category: "Men's Leather Shoes" });  
+    setIsProductFormOpen(true);  
+    setIsDescriptionModalOpen(false);  
+  };  
 
-  const closeEditProduct = () => {
-    setProductToEdit(null);
-    setIsProductFormOpen(false);
-  };
+  const closeEditProduct = () => {  
+    setProductToEdit(null);  
+    setIsProductFormOpen(false);  
+  };  
 
-  const closeEditDescription = () => {
-    setProductToEdit(null);
-    setIsDescriptionModalOpen(false);
-  };
+  const closeEditDescription = () => {  
+    setProductToEdit(null);  
+    setIsDescriptionModalOpen(false);  
+  };  
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("/ims/products/Mens-Leather-Shoes");
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-        const data = await response.json();
+  useEffect(() => {  
+    const fetchProducts = async () => {  
+      const token = localStorage.getItem("access_token");  
+      if (!token) {  
+        setError("Unauthorized: No access token found.");  
+        return;  
+      }  
 
-        // Remove duplicates based on productName, productDescription, and unitPrice
-        const uniqueProducts = data.filter((product, index, self) => 
-          index === self.findIndex((p) => (
-            p.productName === product.productName &&
-            p.productDescription === product.productDescription &&
-            p.unitPrice === product.unitPrice
-          ))
-        );
+      try {  
+        const response = await axios.get("/ims/products/Mens-Leather-Shoes", {  
+          headers: {  
+            Authorization: `Bearer ${token}`  
+          }  
+        });  
 
-        setProducts(uniqueProducts);
-      } catch (error) {
-        console.error(error);
-        setError("Could not fetch products. Please try again later.");
-      }
-    };
+        // Remove duplicates based on productName, productDescription, and unitPrice  
+        const uniqueProducts = response.data.filter((product, index, self) =>   
+          index === self.findIndex((p) => (  
+            p.productName === product.productName &&  
+            p.productDescription === product.productDescription &&  
+            p.unitPrice === product.unitPrice  
+          ))  
+        );  
 
-    fetchProducts();
-  }, []);
+        setProducts(uniqueProducts);  
+      } catch (error) {  
+        console.error(error);  
+        setError("Could not fetch products. Please try again later.");  
+      }  
+    };  
+
+    fetchProducts();  
+  }, []);  
 
   return (
     <div className="mens-catalog-products-container">
@@ -110,7 +116,7 @@ const MensLeatherShoes = () => {
             <div className="mens-catalog-product-info">
               <h3>{product.productName}</h3>
               <p>{product.productDescription}</p>
-              <p>Price: ${product.unitPrice}</p>
+              <p>Price: ₱{product.unitPrice}</p>
             </div>
 
             <div className="mens-catalog-product-actions">

@@ -17,7 +17,7 @@ begin
 	set nocount on;
 
 	declare @productID int, @vendorID int, @vendorName varchar(255), @variantID int, @warehouseID int;
-	declare @orderID int, @orderDate date, @expectedDate date;
+	declare @orderID int, @orderDate datetime, @expectedDate datetime;
 	set @orderDate = GETDATE();
 	set @expectedDate = dateadd(day, 7, @orderDate);
 

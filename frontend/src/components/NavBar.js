@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import "./NavBar.css";
 import AdminTool from "./AdminTool"; // Import AdminTool component
 
-
 const NavBar = ({ onLogout }) => {
   const [menuActive, setMenuActive] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state for Admin Tool
@@ -50,16 +49,16 @@ const NavBar = ({ onLogout }) => {
       <nav>
         <ul id="menu" className={`menu ${menuActive ? "active" : ""}`}>
           <li>
-            <Link to="/Dashboard">Dashboard</Link> {/* Changed to Link */}
+            <Link to="/Dashboard">Dashboard</Link>
           </li>
           <li>
-            <Link to="/ProductCatalog">Product Catalog</Link> {/* Changed to Link */}
+            <Link to="/ProductCatalog">Product Catalog</Link>
           </li>
           <li>
-            <Link to="/OrderAndRequest">Order & Request</Link> {/* Changed to Link */}
+            <Link to="/OrderAndRequest">Order & Request</Link>
           </li>
           <li>
-            <Link to="/Sales">Sales</Link> {/* Changed to Link */}
+            <Link to="/Sales">Sales</Link>
           </li>
         </ul>
 
@@ -100,23 +99,6 @@ const NavBar = ({ onLogout }) => {
         </button>
 
         <div className="user-notification-icons">
-          <button className="notification-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              className="notification-icon-svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M18 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 3.314-2 6.174-4.857 7.439.309.537.857.961 1.572 1.039 2.726.156 5.216 1.736 5.216 3.527 0 1.189.91 2.163 2.083 2.163h4.122c1.172 0 2.083-.974 2.083-2.163 0-1.791 2.49-3.371 5.216-3.527.715-.078 1.263-.502 1.572-1.039C20 16.174 18 13.314 18 10z"
-              />
-            </svg>
-          </button>
-
           {/* Admin Tool Button */}
           <button className="user-icon" onClick={openAdminToolModal}>
             <svg
@@ -163,4 +145,3 @@ const NavBar = ({ onLogout }) => {
 };
 
 export default NavBar;
- 

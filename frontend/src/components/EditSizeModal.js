@@ -1,57 +1,64 @@
-import React, { useState } from "react";
-import axios from "axios";
-import "./EditSizeModal.css";
+import React, { useState } from "react";  
+import axios from "axios";  
+import "./EditSizeModal.css";  
 
-const EditSizeModal = ({ selectedSize, productName, productDescription, unitPrice, category, onClose, onSave }) => {
-  const [formData, setFormData] = useState({
-    size: selectedSize.size,
-    threshold: selectedSize.threshold,
-    reorderLevel: selectedSize.reorderQuantity,
-    maxQuantity: selectedSize.maxQuantity,
-    minQuantity: selectedSize.minQuantity,
-  });
+const EditSizeModal = ({ selectedSize, productName, productDescription, unitPrice, category, onClose, onSave }) => {  
+  const [formData, setFormData] = useState({  
+    size: selectedSize.size,  
+    threshold: selectedSize.threshold,  
+    reorderLevel: selectedSize.reorderQuantity,  
+    maxQuantity: selectedSize.maxQuantity,  
+    minQuantity: selectedSize.minQuantity,  
+  });  
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);  
+  const [error, setError] = useState(null);  
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleChange = (e) => {  
+    const { name, value } = e.target;  
+    setFormData((prev) => ({ ...prev, [name]: value }));  
+  };  
 
-  const handleSave = async () => {
-    setLoading(true);
-    setError(null);
+  const handleSave = async () => {  
+    setLoading(true);  
+    setError(null);  
 
-    try {
-      // Prepare the payload for the API request
-      const payload = {
-        productName,
-        productDescription,
-        size: selectedSize.size,
-        category,
-        unitPrice,
-        newSize: formData.size,
-        minStockLevel: parseInt(formData.minQuantity),
-        maxStockLevel: parseInt(formData.maxQuantity),
-        reorderLevel: parseInt(formData.reorderLevel),
-        threshold: parseInt(formData.threshold),
-      };
+    try {  
+      // Prepare the payload for the API request  
+      const payload = {  
+        productName,  
+        productDescription,  
+        size: selectedSize.size,  
+        category,  
+        unitPrice,  
+        newSize: formData.size,  
+        minStockLevel: parseInt(formData.minQuantity),  
+        maxStockLevel: parseInt(formData.maxQuantity),  
+        reorderLevel: parseInt(formData.reorderLevel),  
+        threshold: parseInt(formData.threshold),  
+      };  
 
-      // Send a PUT request to the backend API
-      const response = await axios.put("/ims/products/update", payload);
+      // Retrieve the access token  
+      const token = localStorage.getItem("access_token");  
 
-      // Handle successful update
-      console.log(response.data.message);
-      onSave(formData); // Update parent state if needed
-      onClose();
-    } catch (err) {
-      console.error("Error updating product:", err.response?.data?.detail || err.message);
-      setError(err.response?.data?.detail || "An error occurred while updating the product.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Send a PUT request to the backend API with the token in headers  
+      const response = await axios.put("/ims/products/update", payload, {  
+        headers: {  
+          Authorization: `Bearer ${token}`, // Add the access token here  
+        },  
+      });  
+
+      // Handle successful update  
+      console.log(response.data.message);  
+      onSave(formData); // Update parent state if needed  
+      onClose();  
+    } catch (err) {  
+      console.error("Error updating product:", err.response?.data?.detail || err.message);  
+      setError(err.response?.data?.detail || "An error occurred while updating the product.");  
+    } finally {  
+      setLoading(false);  
+    }  
+  };  
 
   return (
     <div className="editsize-modal-overlay">

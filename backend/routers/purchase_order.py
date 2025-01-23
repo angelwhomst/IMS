@@ -402,7 +402,7 @@ async def get_product_sizes(product_name: str):
         conn = await database.get_db_connection()
         cursor = await conn.cursor()
 
-        # Debugging: Print received product_name
+        # debugging: print received product_name
         print(f"Fetching sizes for: {product_name}")
 
         await cursor.execute("EXEC GetProductSizes ?", (product_name,))

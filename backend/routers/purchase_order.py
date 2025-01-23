@@ -6,7 +6,7 @@ from typing import Optional, List
 from decimal import Decimal
 import logging
 import database
-from routers.auth import role_required
+from routers.auth import role_required, get_current_active_user
 
 
 router = APIRouter(dependencies=[Depends(role_required(["admin"]))])
@@ -370,14 +370,46 @@ async def get_product_details(product_name: str):
         await conn.close()
 
 
+@router.get('/current-user')
+async def get_current_user_details(current_user: dict = Depends(get_current_active_user)):
+    try:
+        return {
+            "userID": current_user.userID,  
+            "firstName": current_user.firstName,
+            "lastName": current_user.lastName,
+            "username": current_user.username        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching current user: {str(e)}")
+
+@router.get('/dropdown-data/products')
+async def get_products():
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+        await cursor.execute(
+            '''SELECT distinct productName FROM Products WHERE isActive = 1;'''
+        )
+        products = [row[0] for row in await cursor.fetchall()]
+        return {"products": products}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")
+    finally:
+        await conn.close()
+
 @router.get('/get-product-sizes/{product_name}')
 async def get_product_sizes(product_name: str):
     try:
         conn = await database.get_db_connection()
         cursor = await conn.cursor()
 
+        # Debugging: Print received product_name
+        print(f"Fetching sizes for: {product_name}")
+
         await cursor.execute("EXEC GetProductSizes ?", (product_name,))
         sizes = await cursor.fetchall()
+
+        if not sizes:
+            raise HTTPException(status_code=404, detail="No sizes found for this product.")
 
         return {"sizes": [size[0] for size in sizes]}
     except Exception as e:
@@ -385,33 +417,22 @@ async def get_product_sizes(product_name: str):
     finally:
         await conn.close()
 
-# for warehouse address
-@router.get('/warehouse-address')
-async def get_warehouse_address():
+
+@router.get('/dropdown-data/warehouses')
+async def get_warehouses():
     try:
         conn = await database.get_db_connection()
         cursor = await conn.cursor()
-        await cursor.execute('''SELECT warehouseName, building, street, barangay, city, country, zipcode
-                                FROM warehouses
-                                WHERE warehouseID = 1''')
-        warehouse = await cursor.fetchone()
+        await cursor.execute(
+            '''SELECT warehouseName, 
+                   CONCAT(building, ', ', street, ', ', barangay, ', ', city, ', ', country, ', ', zipcode) AS fullAddress
+            FROM Warehouses'''
+        )
+        warehouses = [{"warehouseName": row[0], "fullAddress": row[1]} for row in await cursor.fetchall()]
+        return {"warehouses": warehouses}
 
-        # Check if a row was returned
-        if warehouse:
-            # Construct the response dictionary
-            response = {
-                "warehouseName": warehouse[0],
-                "building": warehouse[1],
-                "street": warehouse[2],
-                "barangay": warehouse[3],
-                "city": warehouse[4],
-                "country": warehouse[5],
-                "zipcode": warehouse[6]
-            }
-            return response
-        else:
-            raise HTTPException(status_code=404, detail="Warehouse not found.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching warehouse address: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching warehouses: {str(e)}")
+    
     finally:
         await conn.close()

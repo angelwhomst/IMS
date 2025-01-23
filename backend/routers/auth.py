@@ -23,6 +23,8 @@ class TokenData(BaseModel):
 
 class User(BaseModel):
     username: str
+    firstName: str
+    lastName: str
     userRole: str
     disabled: bool or None = None
 
@@ -30,6 +32,7 @@ class User(BaseModel):
 class UserInDB(User):
     userID: int
     hashed_password: str
+    
 
 # set passowrd hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -38,7 +41,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 async def get_user_from_db(username: str):
     conn = await database.get_db_connection()
     cursor = await conn.cursor()
-    await cursor.execute('''SELECT userID, username, userPassword, userRole, isDisabled 
+    await cursor.execute('''SELECT userID, username, firstName, lastName, userPassword, userRole, isDisabled 
                             FROM users WHERE username = ?''', (username,))
     user_row = await cursor.fetchone()
     await conn.close()
@@ -47,9 +50,11 @@ async def get_user_from_db(username: str):
         return UserInDB(
             userID=user_row[0],
             username=user_row[1],
-            hashed_password=user_row[2],
-            userRole=user_row[3],
-            disabled=user_row[4] == 1
+            firstName=user_row[2],
+            lastName=user_row[3],
+            hashed_password=user_row[4],
+            userRole=user_row[5],
+            disabled=user_row[6] == 1
         )
     return None
 

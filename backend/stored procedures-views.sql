@@ -138,6 +138,7 @@ left join
     products p on pv.productid = p.productid
 order by po.orderDate desc
 end
+go
 
 create procedure get_orders_by_status
 @orderStatus varchar(50)
@@ -158,3 +159,31 @@ left join
 where po.orderStatus = @orderStatus
 order by po.orderDate desc
 end
+go
+
+
+
+create proc get_delivered_orders_with_orderid
+as
+SELECT 
+                po.orderID,                       -- Include orderID
+                p.productName, 
+                p.category, 
+                p.size, 
+                pod.orderQuantity,
+                FORMAT((pod.orderQuantity * p.unitPrice), 'N', 'en-US') AS [total price],
+                po.statusDate, 
+                po.orderStatus
+            FROM 
+                PurchaseOrders AS po
+            LEFT JOIN 
+                PurchaseOrderDetails AS pod ON po.orderID = pod.orderID
+            LEFT JOIN 
+                productVariants pv ON pod.variantid = pv.variantid
+            LEFT JOIN 
+                Products p ON pv.productid = p.productid
+            WHERE 
+                po.orderStatus = 'Delivered'
+            ORDER BY 
+                po.orderDate DESC
+			

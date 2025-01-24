@@ -2,8 +2,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 import logging
-import database
 import json
+from datetime import datetime
+import httpx
+import asyncio
+import database
+
 
 router = APIRouter()
 
@@ -256,19 +260,9 @@ async def get_delivered_orders():
         # SQL query to fetch only orders with the status 'Delivered'
         await cursor.execute(
             '''
-            SELECT p.productName, p.category, p.size, 
-                   pod.orderQuantity,
-                   FORMAT((pod.orderQuantity * p.unitPrice), 'N', 'en-US') AS [total price],
-                   po.statusDate, po.orderStatus
-            FROM PurchaseOrders AS po
-            LEFT JOIN PurchaseOrderDetails AS pod ON po.orderID = pod.orderID
-            LEFT JOIN productVariants pv ON pod.variantid = pv.variantid
-            LEFT JOIN Products p ON pv.productid = p.productid
-            WHERE po.orderStatus = 'Delivered'  -- Filtering for delivered orders only
-            ORDER BY po.orderDate DESC
+            exec get_delivered_orders_with_orderid
             '''
         )
-
         delivered_orders_row = await cursor.fetchall()
 
         if not delivered_orders_row:
@@ -277,13 +271,14 @@ async def get_delivered_orders():
         # Prepare the response data with the necessary fields
         delivered_orders = [
             {
-                "product_name": row[0],
-                "category": row[1],
-                "size": row[2],
-                "quantity": row[3],
-                "total_price": row[4],
-                "status_date": row[5].strftime("%m-%d-%Y %I:%M %p"),
-                "order_status": row[6]
+                "order_id": row[0],
+                "product_name": row[1],
+                "category": row[2],
+                "size": row[3],
+                "quantity": row[4],
+                "total_price": row[5],
+                "status_date": row[6],
+                "order_status": row[7]
             }
             for row in delivered_orders_row
         ]
@@ -299,59 +294,6 @@ async def get_delivered_orders():
     finally:
         if conn:
             await conn.close()
-
-#Received
-@router.post("/ims/variants/mark-received")
-async def mark_variants_received(order: OrderID):
-    order_id = order.order_id
-    conn = None
-    try:
-        conn = await database.get_db_connection()
-        cursor = await conn.cursor()
-
-        # Check if order exists and is marked as Delivered
-        await cursor.execute(
-            '''
-            SELECT orderStatus 
-            FROM purchaseOrders
-            WHERE orderID = ?
-            ''',
-            (order_id,)
-        )
-        order_status_row = await cursor.fetchone()
-
-        if not order_status_row:
-            raise HTTPException(status_code=404, detail=f"Order with ID {order_id} not found.")
-
-        order_status = order_status_row[0]
-        if order_status != "Delivered":
-            raise HTTPException(status_code=400, detail=f"Order is not in 'Delivered' status. Current status: {order_status}")
-
-        # Update orderStatus to Received
-        logging.info(f"Updating order status to 'Received' for orderID: {order_id}")
-        await cursor.execute(
-            '''
-            UPDATE purchaseOrders
-            SET orderStatus = 'Received'
-            WHERE orderID = ?
-            ''',
-            (order_id,)
-        )
-        await conn.commit()
-
-        return {"message": f"Order {order_id} marked as 'Received' successfully.", "status": "success"}
-    
-    except HTTPException as e:
-        logging.error(f"HTTP error occurred: {e.status_code} - {e.detail}")
-        raise
-    except Exception as e:
-        logging.error(f"Unexpected error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail="An error occurred while marking the order as 'Received'.")
-    finally:
-        if conn:
-            await conn.close()
-
-
 
 # for receive orders
 
@@ -395,11 +337,96 @@ async def get_all_orders():
     return {"All order status": orders_data}  
 
 # display orders by status  
-@router.get('/{status}-orders')  
+@router.get('/{status}')  
 async def get_orders_by_status(status: str):  
-    valid_statuses = ['Pending', 'Confirmed', 'Rejected', 'To Ship', 'Delivered']  
-    if status not in valid_statuses:  
-        raise HTTPException(status_code=400, detail="Invalid order status")  
+    valid_statuses = ['Pending', 'Confirmed', 'Rejected', 'To Ship', 'Delivered', 'Received']  
+    formatted_status = status.replace("-", " ")  # convert "ToShip" back to "To Ship"
+    
+    if formatted_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid order status") 
     
     orders_data = await fetch_orders(order_status=status)  
     return {f"{status} orders": orders_data}
+
+
+#Received
+@router.post("/ims/orders/mark-received")
+async def mark_order_received(order: OrderID):
+    order_id = order.order_id
+    conn = None
+    try:
+        conn = await database.get_db_connection()
+        cursor = await conn.cursor()
+
+        # check if order exists and is marked as Delivered
+        await cursor.execute(
+            '''
+            SELECT orderStatus 
+            FROM purchaseOrders
+            WHERE orderID = ?
+            ''',
+            (order_id,)
+        )
+        order_status_row = await cursor.fetchone()
+
+        if not order_status_row:
+            raise HTTPException(status_code=404, detail="Order not found.")
+        
+        order_status = order_status_row[0]
+        if order_status != 'Delivered':
+            raise HTTPException(status_code=400, detail="Order is not marked as Delivered. Current status: {order_status}")
+        
+        # update order status to Received in IMs
+        logging.info(f"Marking order {order_id} as Received orderID: {order_id}")
+        await cursor.execute(
+            """update purchaseOrders
+            set orderStatus = 'Received',
+            statusDate = GETDATE()
+            where orderID = ?
+            """, (order_id,)
+        )
+        await conn.commit()
+
+        # send update to vms
+        vms_url = "http://127.0.0.1:8001/orders/vms/orders/update-status"
+        vms_payload = {"orderID": order_id, "orderStatus": "Received"}
+
+        # call helper function to send data to vms with retries 
+        vms_response = await send_to_ims_api_with_retries(vms_url, vms_payload)
+
+        logging.info(f"VMS Response: {vms_response}")
+
+        return {
+            "message": f"Order {order_id} marked as 'Received' successfully in IMS and VMS.",
+            "status": "success"
+        }
+
+    except HTTPException as e:
+        logging.error(f"HTTP error occurred: {e.status_code} - {e.detail}")
+        raise
+    except Exception as e:
+        logging.error(f"Unexpected error occurred: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="An error occurred while marking the order as 'Received'."
+        )
+    finally:
+        if conn:
+            await conn.close()
+
+# helper function for retrying api calls
+async def send_to_ims_api_with_retries(url, payload, retries=3, delay=2):
+    for attempt in range(retries):
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, json=payload)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            logging.error(f"HTTP error occurred: {e}")
+        except Exception as e:
+            logging.error(f"Attempt {attempt + 1} failed: {e}")
+        await asyncio.sleep(delay)
+    raise HTTPException(status_code=500, detail="Failed to update VMS after multiple attempts.")
+
+    

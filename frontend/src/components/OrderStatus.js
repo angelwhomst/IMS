@@ -9,10 +9,11 @@ const OrderStatus = () => {
   //function to fetch orders from the backend
   const fetchOrders = async () => {
     try {
-      const endpoint =
-        status === "All"
-          ? "/receive-orders/all-orders"
-          : `/receive-orders/${status}-orders`;
+      const formattedStatus = status.replace(/\s+/g, ""); // Rrmoves spaces for consistency
+    const endpoint =
+      status === "All"
+        ? "/receive-orders/all-orders"
+        : `/receive-orders/${formattedStatus}`;
 
       const response = await axios.get(endpoint);
 
@@ -51,6 +52,7 @@ const OrderStatus = () => {
             <option value="Rejected">Rejected</option>
             <option value="To Ship">To Ship</option>
             <option value="Delivered">Delivered</option>
+            <option value="Received">Received</option>
           </select>
         </div>
       </div>

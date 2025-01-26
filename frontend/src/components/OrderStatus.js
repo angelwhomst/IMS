@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./OrderStatus.css";
 
+const BASE_URL = "https://inventory-management-system-m9j1.onrender.com";
+
 const OrderStatus = () => {
   const [status, setStatus] = useState("All");
   const [orders, setOrders] = useState([]); // state to hold fetched orders
@@ -9,11 +11,13 @@ const OrderStatus = () => {
   //function to fetch orders from the backend
   const fetchOrders = async () => {
     try {
-      const formattedStatus = status.replace(/\s+/g, ""); // Rrmoves spaces for consistency
-    const endpoint =
-      status === "All"
-        ? "/receive-orders/all-orders"
-        : `/receive-orders/${formattedStatus}`;
+      const formattedStatus = status.replace(/\s+/g, ""); // Removes spaces for consistency
+      const endpoint =
+        status === "All"
+          ? `${BASE_URL}/receive-orders/all-orders`
+          : `${BASE_URL}/receive-orders/${formattedStatus}-orders`;
+
+      console.log("Fetching orders from:", endpoint);
 
       const response = await axios.get(endpoint);
 

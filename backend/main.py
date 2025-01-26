@@ -25,7 +25,7 @@ app.add_middleware(
 # mount the static files directory
 app.mount("/images_upload", StaticFiles(directory=os.path.join(os.getcwd(), "images_upload")), name="images")
 
-# Include routers for the various APIs
+# include routers for the various APIs
 app.include_router(inventory.router, prefix='/ims', tags=['inventory'])
 app.include_router(auth.router, prefix='/auth', tags=['auth'])
 app.include_router(purchase_order.router, prefix='/purchase-order', tags=['purchase-order'])

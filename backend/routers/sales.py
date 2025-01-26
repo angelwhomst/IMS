@@ -233,5 +233,3 @@ async def sales_data():
     finally:
         await conn.close()
         
-
-        # comment

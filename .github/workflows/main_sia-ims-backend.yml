@@ -25,6 +25,6 @@ jobs:
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: "sia-ims-backend"  
+        app-name: "SIA-IMS-BACKEND"  
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: backend  # Deploy only the backend folder

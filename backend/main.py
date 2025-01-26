@@ -22,7 +22,7 @@ app.add_middleware(
 )
 
 # mount the static files directory
-app.mount("/images_upload", StaticFiles(directory="images_upload"), name="images")
+app.mount("/images_upload", StaticFiles(directory=os.path.join(os.getcwd(), "images_upload")), name="images")
 
 # Include routers for the various APIs
 app.include_router(inventory.router, prefix='/ims', tags=['inventory'])

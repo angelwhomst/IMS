@@ -19,7 +19,7 @@ const EditProductForm = ({ product, category, onClose }) => {
       const fetchSize = async () => {  
         try {  
           const categoryParam = category || 'Uncategorized';  
-          const url = `/ims/products/sizes?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;  
+          const url = `https://ims-wc58.onrender.com/ims/products/sizes?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;  
           
           const token = localStorage.getItem("access_token"); // Retrieve the token  
 

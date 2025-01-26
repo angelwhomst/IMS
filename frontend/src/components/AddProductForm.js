@@ -87,7 +87,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://127.0.0.1:8000/ims/products",
+        "https://ims-wc58.onrender.com/ims/products",
         payload,
         {
           headers: {

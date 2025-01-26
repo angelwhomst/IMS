@@ -31,7 +31,7 @@ const EmployeeSales = () => {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/employee-sales/sales/products?category=${encodeURIComponent(
+          `https://ims-wc58.onrender.com/employee-sales/sales/products?category=${encodeURIComponent(
             selectedCategory
           )}`,
           {
@@ -132,7 +132,7 @@ const EmployeeSales = () => {
         // Send each cart item to the backend  
         for (const item of cart) {  
             await axios.post(  
-                "http://127.0.0.1:8000/employee-sales/sales/cart",  
+                "https://ims-wc58.onrender.com/employee-sales/sales/cart",  
                 {  
                     productName: item.productName,  
                     category: item.category,  
@@ -185,7 +185,7 @@ const handleCheckout = async () => {
 
       // Then, proceed with the checkout request  
       const response = await axios.post(  
-          "http://127.0.0.1:8000/employee-sales/sales/checkout",  
+          "https://ims-wc58.onrender.com/employee-sales/sales/checkout",  
           checkoutData,  
           {  
               headers: {  

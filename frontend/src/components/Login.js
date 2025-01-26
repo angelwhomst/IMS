@@ -1,61 +1,58 @@
 import React, { useState } from 'react';
-import { jwtDecode } from 'jwt-decode'; // Correct import for jwt-decode
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 const Login = ({ onLogin, onRoleSelect }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // Use the navigate hook from React Router v6
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate(); // React Router v6 hook
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded', 
-        },
-        body: new URLSearchParams({
-          username: username,
-          password: password,
-        }),
-      });
+      const formData = new URLSearchParams();
+      formData.append("username", username);
+      formData.append("password", password);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Response data:', data); // Log the response data to inspect
-
-        const { access_token } = data;
-
-        // Store token in localStorage
-        localStorage.setItem('access_token', access_token);
-
-        // Decode the token and extract the role
-        const decodedToken = jwtDecode(access_token);
-        console.log('Decoded Token:', decodedToken); // Log decoded token to inspect its content
-
-        // Ensure the decoded token contains the 'role' attribute
-        const role = decodedToken.role;
-
-        // Call the onLogin callback with the role
-        onLogin(role);
-
-        // Call onRoleSelect if it's passed as a prop
-        if (onRoleSelect && typeof onRoleSelect === 'function') {
-          onRoleSelect(role); // Only call if it's a valid function
-        } else {
-          console.warn('onRoleSelect is not a function or not passed as prop');
+      const response = await axios.post(
+        "https://ims-wc58.onrender.com/auth/token",
+        formData, // Correctly formatted form data
+        {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
         }
-        // Redirect to dashboard after successful login
-        navigate('/dashboard');
-      } else {
-        alert('Invalid username or password');
+      );
+
+      const { access_token } = response.data; // Extract token from response
+
+      if (!access_token) {
+        throw new Error("Token not received from server.");
       }
+
+      // Store token in localStorage
+      localStorage.setItem("access_token", access_token);
+
+      // Decode token to extract user role
+      const decodedToken = jwtDecode(access_token);
+      console.log("Decoded Token:", decodedToken); // Debugging
+
+      const role = decodedToken.role || "user"; // Default to 'user' if no role is present
+
+      // Call parent callbacks
+      onLogin(role);
+      if (typeof onRoleSelect === "function") {
+        onRoleSelect(role);
+      } else {
+        console.warn("onRoleSelect is not a function or missing.");
+      }
+
+      // Redirect based on role
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Error:', error);
-      alert('An error occurred while logging in.');
+      console.error("Login failed:", error);
+      alert("Invalid credentials. Please try again.");
     }
   };
 

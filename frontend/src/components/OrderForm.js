@@ -29,7 +29,7 @@ const fetchProducts = async () => {
       return;
     }
 
-    const response = await axios.get("http://127.0.0.1:8000/purchase-order/dropdown-data/products", {
+    const response = await axios.get("https://ims-wc58.onrender.com/purchase-order/dropdown-data/products", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -48,7 +48,7 @@ const fetchWarehouses = async () => {
       return;
     }
 
-    const response = await axios.get("http://127.0.0.1:8000/purchase-order/dropdown-data/warehouses", {
+    const response = await axios.get("https://ims-wc58.onrender.com/purchase-order/dropdown-data/warehouses", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -67,7 +67,7 @@ const fetchProductSizes = async (selectedProductName) => {
       return;
     }
 
-    const response = await axios.get(`http://127.0.0.1:8000/purchase-order/get-product-sizes/${selectedProductName}`, {
+    const response = await axios.get(`https://ims-wc58.onrender.com/purchase-order/get-product-sizes/${selectedProductName}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -86,7 +86,7 @@ const fetchCurrentUser = async () => {
       return;
     }
 
-    const response = await axios.get("http://127.0.0.1:8000/purchase-order/current-user", {
+    const response = await axios.get("https://ims-wc58.onrender.com/purchase-order/current-user", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -136,7 +136,7 @@ const handleSubmit = async (e) => {
     }
 
     const response = await axios.post(
-      "http://127.0.0.1:8000/purchase-order/create-purchase-order",
+      "https://ims-wc58.onrender.com/purchase-order/create-purchase-order",
       payload,
       {
         headers: {

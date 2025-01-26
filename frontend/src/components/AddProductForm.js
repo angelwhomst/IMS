@@ -174,8 +174,8 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
               <option value="">Select Category</option>
               <option value="Men's Leather Shoes">Men's Leather Shoes</option>
               <option value="Women's Leather Shoes">Women's Leather Shoes</option>
-              <option value="Girl's Leather Shoes">Girls Leather Shoes</option>
-              <option value="Boy's Leather Shoes">Boys Leather Shoes</option>
+              <option value="Girl's Leather Shoes">Girl's Leather Shoes</option>
+              <option value="Boy's Leather Shoes">Boy's Leather Shoes</option>
             </select>
           </div>
 

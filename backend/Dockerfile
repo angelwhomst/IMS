@@ -37,3 +37,9 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 RUN sed -i.bak 's~MinProtocol = TLSv[^>]*~MinProtocol = TLSv1.0~' /etc/ssl/openssl.cnf
 RUN sed -i.bak 's~CipherString = DEFAULT@SECLEVEL=[^>]*~CipherString = DEFAULT@SECLEVEL=1~' /etc/ssl/openssl.cnf
+
+# Expose port 8000
+EXPOSE 8000
+
+# Command to run the app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

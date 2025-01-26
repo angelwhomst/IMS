@@ -65,7 +65,7 @@ const MensLeatherShoes = () => {
       }  
 
       try {  
-        const response = await axios.get("/ims/products/Mens-Leather-Shoes", {  
+        const response = await axios.get("https://ims-wc58.onrender.com/ims/products/Mens-Leather-Shoes", {  
           headers: {  
             Authorization: `Bearer ${token}`  
           }  

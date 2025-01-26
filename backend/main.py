@@ -10,8 +10,12 @@ import logging
 
 app = FastAPI()
 
-origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
-
+# origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://inventory-management-system-m9j1.onrender.com"
+]
 
 # CORS middleware configuration
 app.add_middleware(
@@ -22,7 +26,7 @@ app.add_middleware(
     allow_origins=origins,
 )
 
-# mount the static files directory
+# serve static files
 app.mount("/images_upload", StaticFiles(directory=os.path.join(os.getcwd(), "images_upload")), name="images")
 
 # include routers for the various APIs
@@ -33,17 +37,17 @@ app.include_router(employee_accounts.router, prefix='/employees', tags=['employe
 app.include_router(receive_orders.router, prefix='/receive-orders', tags=['receive-orders'])
 app.include_router(sales.router, prefix='/employee-sales', tags=['employee sales'])
 
-# Health check endpoint
+# health check endpoint
 @app.get("/health", tags=["health"])
 async def health_check():
     return {"status": "ok"}
 
-# Example API endpoint to serve some data (to match the React fetch URL)
+# example API endpoint to serve some data (to match the React fetch URL)
 @app.get("/api/data")
 async def get_data():
     return {"data": "Sample data from FastAPI backend!"}
 
-# Global exception handler for better error responses
+# global exception handler for better error responses
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -57,5 +61,5 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  # Default to 8000 if PORT is not set  
+    port = int(os.environ.get("PORT", 8000))  # default to 8000 if PORT is not set  
     uvicorn.run("main:app", host="0.0.0.0", port=port)  

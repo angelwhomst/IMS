@@ -7,6 +7,7 @@ load_dotenv()  # Load environment variables from .env file
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 async def get_db_connection():
+    conn = None  # Initialize the variable to avoid UnboundLocalError
     try:
         conn = await aioodbc.connect(dsn=DATABASE_URL, autocommit=True)
         print("Connection successful")
@@ -19,7 +20,7 @@ async def get_db_connection():
 
     except Exception as e:
         print("Connection failed:", str(e))
-        return None
+        return None  # Ensures function returns something even on failure
 
 
 # import aioodbc

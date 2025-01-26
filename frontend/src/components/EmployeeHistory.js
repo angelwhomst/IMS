@@ -18,7 +18,7 @@ const EmployeeHistory = () => {
       }
 
       try {
-        const response = await axios.get("/employee-sales/sales/history", {
+        const response = await axios.get("https://ims-wc58.onrender.com/employee-sales/sales/history", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

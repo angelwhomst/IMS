@@ -18,7 +18,7 @@ const Sales = () => {
 
       try
       {
-        const response = await axios.get("/employee-sales/sales/data", {
+        const response = await axios.get("https://ims-wc58.onrender.com/employee-sales/sales/data", {
           headers: {
             Authorization: `Bearer ${token}`, 
           },

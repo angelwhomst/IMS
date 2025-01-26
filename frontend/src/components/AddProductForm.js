@@ -36,11 +36,11 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB limit
 
     if (file && file.type.startsWith("image/")) {
       if (file.size > MAX_FILE_SIZE) {
-        alert("File size exceeds the 5MB limit.");
+        alert("File size exceeds the 2MB limit.");
         return;
       }
 
@@ -85,7 +85,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
     };
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("acess_token");
       const response = await axios.post(
         "https://ims-wc58.onrender.com/ims/products",
         payload,
@@ -99,7 +99,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
       alert("Product added successfully");
       onSubmit();
     } catch (error) {
-      console.error("Error adding product:", error);
+      console.error("Error adding product:", error.response || error);
     }
   };
 

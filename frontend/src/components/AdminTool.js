@@ -22,7 +22,7 @@ const AdminTool = ({ closeModal }) => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get('/employees/list-employee-accounts', {
+      const response = await axios.get('https://ims-wc58.onrender.com/employees/list-employee-accounts', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
@@ -59,7 +59,7 @@ const AdminTool = ({ closeModal }) => {
 
   const createEmployee = async (newEmployee) => {
     try {
-      await axios.post('/employees/create', newEmployee, {
+      await axios.post('https://ims-wc58.onrender.com/employees/create', newEmployee, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
@@ -72,7 +72,7 @@ const AdminTool = ({ closeModal }) => {
 
   const updateEmployee = async (id, updatedEmployee) => {
     try {
-      await axios.put(`/employees/update/${id}`, updatedEmployee, {
+      await axios.put(`https://ims-wc58.onrender.com/employees/update/${id}`, updatedEmployee, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
@@ -111,7 +111,7 @@ const AdminTool = ({ closeModal }) => {
 
   const deleteEmployee = async (id) => {
     try {
-      await axios.delete(`/employees/delete/${id}`, {
+      await axios.delete(`https://ims-wc58.onrender.com/employees/delete/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },

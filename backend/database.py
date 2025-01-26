@@ -1,7 +1,9 @@
+from dotenv import load_dotenv
 import os
 import aioodbc
 
-# Get database connection string from environment variable
+load_dotenv()  # Load environment variables from .env file
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 async def get_db_connection():
@@ -18,7 +20,6 @@ async def get_db_connection():
     except Exception as e:
         print("Connection failed:", str(e))
         return None
-
 
 
 # import aioodbc

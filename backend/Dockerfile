@@ -2,14 +2,13 @@ FROM python:3.10
 
 WORKDIR /app
 
+# Copy only the necessary files to build the image (including requirements.txt)
 COPY . .
 
-# Create a virtual environment in the /app directory
-RUN python -m venv venv
-
-# Install the dependencies
-RUN /bin/bash -c "source venv/bin/activate && pip install --no-cache-dir -r requirements.txt"
+# Install dependencies from requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 EXPOSE 8000
 
+# Start the app with Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,48 +1,76 @@
+import os
 import aioodbc
 
-# database config
-server = 'LAPTOP-SSFC864F'
-database = 'IMS'
-driver = 'ODBC Driver 17 for SQL Server'
+# Get database connection string from environment variable
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# async function to get db connection
 async def get_db_connection():
-    dsn = (
-        f"DRIVER={{{driver}}};"
-        f"SERVER={server};"
-        f"DATABASE={database};"
-        "Trusted_Connection=yes;"
-    )
-    conn = await aioodbc.connect(dsn=dsn, autocommit=True)
+    try:
+        conn = await aioodbc.connect(dsn=DATABASE_URL, autocommit=True)
+        print("Connection successful")
 
-    async def dict_row_factory(cursor, row):
-        return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
+        async def dict_row_factory(cursor, row):
+            return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
 
-    conn.row_factory = dict_row_factory
-    return conn
+        conn.row_factory = dict_row_factory
+        return conn
+
+    except Exception as e:
+        print("Connection failed:", str(e))
+        return None
 
 
-# import os
+
 # import aioodbc
+# import os
+# from dotenv import load_dotenv
 
-# server = os.getenv("ims-vms.database.windows.net")
-# database = os.getenv("IMS")
-# username = os.getenv("ims_vms_admin")
-# password = os.getenv("Olivarez12345")
+# # load environment variables from .env file
+# load_dotenv()
 
+# # get database configuration from environment variables
+# server = os.getenv("DB_SERVER")
+# database = os.getenv("DB_NAME")
+# username = os.getenv("DB_USER")
+# password = os.getenv("DB_PASSWORD")
+# driver = os.getenv("DB_DRIVER")
+
+# # async function to get database connection
 # async def get_db_connection():
 #     dsn = (
-#         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+#         f"DRIVER={{{driver}}};"
 #         f"SERVER={server};"
 #         f"DATABASE={database};"
 #         f"UID={username};"
 #         f"PWD={password};"
-#         "Encrypt=yes;TrustServerCertificate=no;"
+#         f"Encrypt=yes;"
+#         f"TrustServerCertificate=no;"
 #     )
-#     conn = await aioodbc.connect(dsn=dsn, autocommit=True)
-#     return conn
+
+#     try:
+#         conn = await aioodbc.connect(dsn=dsn, autocommit=True)
+#         print("Connection successful")
+
+#         async def dict_row_factory(cursor, row):
+#             return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
+
+#         conn.row_factory = dict_row_factory  # Assign row factory before returning
+
+#         return conn  # return the connection
+
+#     except Exception as e:
+#         print("Connection failed:", str(e))
+#         return None  # return None in case of failure
 
 
-'''
-Server=tcp:ims-vms.database.windows.net,1433;Initial Catalog=IMS;Persist Security Info=False;User ID=ims_vms_admin;Password={your_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
-'''
+# import asyncio
+
+# async def test_connection():
+#     conn = await get_db_connection()
+#     if conn:
+#         print("Azure SQL Database Connected Successfully!")
+#     else:
+#         print("Failed to connect.")
+
+# asyncio.run(test_connection())
+

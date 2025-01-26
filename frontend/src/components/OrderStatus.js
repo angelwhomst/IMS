@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./OrderStatus.css";
 
-const BASE_URL = "https://inventory-management-system-m9j1.onrender.com";
+const BASE_URL = "https://ims-wc58.onrender.com";
 
 const OrderStatus = () => {
   const [status, setStatus] = useState("All");

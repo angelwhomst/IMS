@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from routers import inventory, purchase_order, auth, employee_accounts, receive_orders, sales
 import uvicorn
 import os
+import logging
 
 app = FastAPI()
 
@@ -43,12 +44,17 @@ async def get_data():
     return {"data": "Sample data from FastAPI backend!"}
 
 # Global exception handler for better error responses
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Error: {exc}")
     return JSONResponse(
         status_code=500,
         content={"message": "An unexpected error occurred.", "details": str(exc)},
     )
+
 
 if __name__ == "__main__":
     uvicorn.run(

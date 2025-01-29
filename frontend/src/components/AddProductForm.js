@@ -36,7 +36,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB limit
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
 
     if (file && file.type.startsWith("image/")) {
       if (file.size > MAX_FILE_SIZE) {
@@ -85,7 +85,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
     };
 
     try {
-      const token = localStorage.getItem("acess_token");
+      const token = localStorage.getItem("access_token");
       const response = await axios.post(
         "https://ims-wc58.onrender.com/ims/products",
         payload,

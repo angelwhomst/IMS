@@ -29,7 +29,7 @@ const fetchProducts = async () => {
       return;
     }
 
-    const response = await axios.get("https://ims-wc58.onrender.com/purchase-order/dropdown-data/products", {
+   const response = await axios.get("https://ims-wc58.onrender.com/purchase-order/dropdown-data/products", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -136,7 +136,8 @@ const handleSubmit = async (e) => {
     }
 
     const response = await axios.post(
-      "https://ims-wc58.onrender.com/purchase-order/create-purchase-order",
+    "https://ims-wc58.onrender.com/purchase-order/create-purchase-order",
+   // "http://127.0.0.1:8000/purchase-order/create-purchase-order",
       payload,
       {
         headers: {

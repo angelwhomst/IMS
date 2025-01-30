@@ -52,6 +52,7 @@ create table Products
 	createdAt DATETIME DEFAULT GETDATE(),
     lastUpdated DATETIME DEFAULT GETDATE(),
 	isActive bit default 1,
+	image_path text,
 	warehouseID numeric constraint FK_warehouseID_product foreign key references Warehouses(warehouseID)
 )
 end

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel 
 import httpx
+import requests
 from datetime import datetime, date, timedelta
 from typing import Optional, List
 from decimal import Decimal
@@ -12,7 +13,7 @@ from routers.auth import role_required, get_current_active_user
 router = APIRouter(dependencies=[Depends(role_required(["admin"]))])
 
 # base url for vms api
-VMS_BASE_URL = 'http://127.0.0.1:8001'
+VMS_BASE_URL = 'http://127.0.0.1:8001/'
 
 # pydantic model for purchase order
 class PurchaseOrder(BaseModel):
@@ -30,19 +31,23 @@ class PurchaseOrder(BaseModel):
 
 
 # function to send purchase order to vms
-async def send_order_to_vms(payload: dict):
-    async with httpx.AsyncClient() as client:
-        try: 
-            response = await client.post(f"{VMS_BASE_URL}/vms/orders", json=payload)
+async def send_order_to_vms(payload: dict):  
+    async with httpx.AsyncClient() as client:  
+        try:   
+            logging.info(f"Sending Order Data to VMS: {payload}")
+            response = await client.post("http://127.0.0.1:8001/vms/orders", json=payload)  
             response.raise_for_status()
-            return response.json()
-        except httpx.HTTPError as e:
-            logging.error(f"HTTP error sending order to VMS: {e}")
-            raise HTTPException(status_code=500, detail=f"Error sending order to VMS: {e}")
-        except ValueError as e:
-            logging.error(f"error parsing response from VMS: {e}")
-            raise HTTPException(
-                status_code=500, detail="Invalied response from VMS")
+            logging.info(f"VMS Response: {response.status_code} - {response.json()}")  
+            return response.json()  
+        except httpx.HTTPError as e:  
+            logging.error(f"HTTP error sending order to VMS: {e.response.status_code} {e.response.text}")  
+            raise HTTPException(status_code=500, detail=f"Error sending order to VMS: {e}")  
+        except ValueError as e:  
+            logging.error(f"Error parsing response from VMS: {e}")  
+            raise HTTPException(status_code=500, detail="Invalid response from VMS") 
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error sending order to VMS: {e}")
+            return {"error": str(e)} 
 
 # webhook to handle stock updates from IMS
 @router.post('/stock')
@@ -142,8 +147,6 @@ WHERE P.productID = ? AND P.isActive = 1;
 
                 # prepare payload for vms
                 po_payload = {
-                    "orderID": orderID,
-                    "productID": productID,
                     "productName": productName,
                     "productDescription": productDescription,
                     "size": size,
@@ -151,6 +154,8 @@ WHERE P.productID = ? AND P.isActive = 1;
                     "category": category,
                     "quantity": quantity_to_order,
                     "warehouseID": warehouseID,
+                    "warehouseName": warehouseName,
+                    "warehouseAddress": f"{building}, {street}, {barangay}, {city}, {country}, {zipcode}",
                     "vendorID": vendorID,
                     "vendorName": vendorName,
                     "orderDate": orderDate,
@@ -190,6 +195,7 @@ def convert_decimal_to_json_compatible(data):
 @router.post('/create-purchase-order')
 async def create_purchase_order(payload: dict):
     try:
+        logging.debug(f"Payload received: {payload}")
         # extract payload fields
         productName = payload.get('productName')
         size = payload.get('size')
@@ -221,19 +227,18 @@ async def create_purchase_order(payload: dict):
         )
         order = await cursor.fetchone()
 
-
-        if not order:
-            raise HTTPException(status_code=404, detail='Failed to create purchase order')
-        
-        orderID = order[0]
+        if order and order[0]:
+            orderID = order[0]
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create purchase order and retrieve orderID.")
 
         await conn.commit()
         # fetch order details for VMS
         await cursor.execute('''
-            SELECT po.orderID, po.orderDate, v.vendorID, v.vendorName, 
+            SELECT po.orderDate, v.vendorID, v.vendorName, 
                    w.warehouseID, w.warehouseName, w.building, w.street, 
                    w.barangay, w.city, w.country, w.zipcode, 
-                   p.productID, p.productName, p.productDescription, p.size, p.color, p.category,
+                    p.productName, p.productDescription, p.size, p.color, p.category,
                    pod.orderQuantity, pod.expectedDate, u.userID, u.firstName, u.lastName
             FROM PurchaseOrders po
             JOIN Vendors v ON po.vendorID = v.vendorID
@@ -250,8 +255,8 @@ async def create_purchase_order(payload: dict):
         if not order_details:
             raise HTTPException(status_code=404, detail="Order details not found.")
 
-        (orderID, orderDate, vendorID, vendorName, warehouseID, warehouseName, building, street, 
-         barangay, city, country, zipcode, productID, productName, productDescription, size, color, category,
+        (orderDate, vendorID, vendorName, warehouseID, warehouseName, building, street, 
+         barangay, city, country, zipcode, productName, productDescription, size, color, category,
          quantity, expectedDate, userID, firstName, lastName) = order_details
         
          # convert datetime values before JSON serialization
@@ -260,8 +265,6 @@ async def create_purchase_order(payload: dict):
 
         # prepare payload for VMS
         po_payload = {
-            "orderID": orderID,
-            "productID": productID,
             "productName": productName,
             "productDescription": productDescription,
             "size": size,
@@ -278,9 +281,12 @@ async def create_purchase_order(payload: dict):
             "userID": userID,
             "userName": f"{firstName} {lastName}",
         }
-
+        logging.debug(f"Order created with ID: {orderID}")
+        # order data before sending it to VMS
+        logging.debug(f"Order Data to be sent to VMS: {po_payload}")
         po_payload = convert_decimal_to_json_compatible(po_payload)
 
+        
         # Send PO to VMS
         response = await send_order_to_vms(po_payload)
 
@@ -291,7 +297,7 @@ async def create_purchase_order(payload: dict):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating purchase order: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating purchase order SHDAHSDHSH: {str(e)}")
 
     finally:
         await conn.close()

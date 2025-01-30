@@ -24,7 +24,8 @@ begin
 	-- validate product existence and fetch productID 
 	select top 1 @productID = productID
 	from products
-	where productName = @productName and category = @category;
+	where productName = @productName and size = @size and category = @category and isActive =1
+	order by productID desc;
 
 	if @productID is null
 	begin 
@@ -63,7 +64,7 @@ begin
         AND city = @city
         AND country = @country
         AND zipcode = @zipcode;
-
+			
     IF @warehouseID IS NULL
     BEGIN
         RAISERROR ('No warehouse found for the given details.', 16, 1);
@@ -72,35 +73,13 @@ begin
 
 	-- insert into PurchaseOrders table
 	insert into PurchaseOrders (orderDate, orderStatus, statusDate, vendorID, userID)
-	output inserted.orderID 
+	output inserted.orderID	
 	values (@orderDate, 'Pending', GETDATE(), @vendorID, @userID);
-
+	
 	set @orderID = IDENT_CURRENT('PurchaseOrders');
 
 	-- insert into PurchaseOrderDetails
 	insert into PurchaseOrderDetails (orderQuantity, expectedDate, warehouseID, orderID, variantID)
 	values (@quantity, @expectedDate, @warehouseID, @orderID, @variantID);
 
-	-- return orderID 
-	select @orderID as orderID;
 end;
-go
-
--- ========================= addwarehouse
-create procedure AddWarehouse
-	@warehouseName varchar(255),
-	@building varchar(255),
-	@street varchar(255),
-	@barangay varchar(255),
-	@city varchar(255),
-	@country varchar(255),
-	@zipcode varchar(25)
-as
-begin
-	set nocount on;
-
-	insert into Warehouses (warehouseName, building, street, barangay, city, country, zipcode)
-	output inserted.warehouseID
-	values (@warehouseName, @building, @street, @barangay, @city, @country, @zipcode);
-end;
-go

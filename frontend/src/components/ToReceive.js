@@ -11,7 +11,7 @@ const ToReceive = () => {
     const fetchOrders = async () => {
       try {
         console.log("Fetching orders...");
-        const response = await axios.get("/receive-orders/ims/variants/delivered");
+        const response = await axios.get("https://ims-wc58.onrender.com/receive-orders/ims/variants/delivered");
         console.log("Fetched orders:", response.data.delivered_orders); // Log the fetched orders
         setOrders(response.data.delivered_orders); // Store fetched orders in state
       } catch (error) {
@@ -34,7 +34,7 @@ const ToReceive = () => {
     try {
       console.log("Sending order ID:", orderId); // Log the order ID
       const response = await axios.post(
-        "/receive-orders/ims/orders/mark-received",
+        "https://ims-wc58.onrender.com/receive-orders/ims/orders/mark-received",
         { order_id: orderId },
         { headers: { "Content-Type": "application/json" } }
       );

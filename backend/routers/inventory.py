@@ -668,7 +668,7 @@ from products as p
 left join ProductVariants as pv
 on p.productID = pv.productID
 where p.productID = ? and p.isActive = 1 and pv.isAvailable =1
-group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, cast(p.image_path as varchar(max))l''', (product_id,)
+group by p.productName, p.productDescription, p.size, p.color, p.unitPrice, p.warehouseID, p.reorderLevel, p.minStockLevel, p.maxStockLevel, cast(p.image_path as varchar(max))''', (product_id,)
 )
         product = await cursor.fetchone()
         if not product:

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";  // Import axios to make API requests
 import "./Dashboard.css";
 
+const BASE_URL = "https://ims-wc58.onrender.com";
+
 const Dashboard = () => {
   const [orderCount, setOrderCount] = useState(0);  // State to hold order count
   const [deliveredCount, setDeliveredCount] = useState(0);  // State to hold delivered count
@@ -21,7 +23,7 @@ const Dashboard = () => {
 
         // Fetch total order count
         const orderResponse = await axios.get(
-          '/dashboard/orders/last30days/count',
+          `${BASE_URL}/dashboard/orders/last30days/count`,
           {
             headers: {
               Authorization: `Bearer ${token}`,  // Add Authorization header
@@ -32,7 +34,7 @@ const Dashboard = () => {
 
         // Fetch delivered order count
         const deliveredResponse = await axios.get(
-          `/dashboard/orders/delivered/last30days/count`,
+          `${BASE_URL}/dashboard/orders/delivered/last30days/count`,
           {
             headers: {
               Authorization: `Bearer ${token}`,  // Add Authorization header
@@ -43,7 +45,7 @@ const Dashboard = () => {
 
         // Fetch total product count
         const productResponse = await axios.get(
-          `/dashboard/products/count`,
+          `${BASE_URL}/dashboard/products/count`,
           {
             headers: {
               Authorization: `Bearer ${token}`,  // Add Authorization header

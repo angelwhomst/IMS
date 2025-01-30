@@ -242,7 +242,15 @@ async def get_all_orders():
 # Display orders by status  
 @router.get('/{status}-orders')  
 async def get_orders_by_status(status: str):  
-    valid_statuses = ['Pending', 'Confirmed', 'Rejected', 'To Ship', 'Delivered']  
+    # normalize status input
+    valid_statuses = {
+        'Pending': 'Pending',
+        'Confirmed': 'Confirmed',
+        'Rejected': 'Rejected',
+        'ToShip': 'To Ship',
+        'Delivered': 'Delivered',
+        'Received': 'Received'
+    }  
     if status not in valid_statuses:  
         raise HTTPException(status_code=400, detail="Invalid order status")  
     

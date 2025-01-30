@@ -5,6 +5,8 @@ import AddProductForm from "./AddProductForm";
 import EditProductForm from "./EditProductForm";
 import EditDescriptionModal from "./EditDescriptionModal";
 
+const BASE_URL = "https://ims-wc58.onrender.com";
+
 const GirlsLeatherShoes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
@@ -51,7 +53,7 @@ const GirlsLeatherShoes = () => {
       console.log(`Sending request to soft-delete product with the following data: {productName: '${productName}', category: '${category}'}`);
 
       const response = await axios.patch(
-        `/ims/products/soft-delete?productName=${productName}&category=${category}`, // Send data as query params
+        `${BASE_URL}/ims/products/soft-delete?productName=${productName}&category=${category}`, // Send data as query params
         {},
         {
           headers: {
@@ -107,7 +109,7 @@ const GirlsLeatherShoes = () => {
     }
 
     try {
-      const response = await axios.get("/ims/products/Girls-Leather-Shoes", {
+      const response = await axios.get(`${BASE_URL}/ims/products/Girls-Leather-Shoes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -142,7 +144,7 @@ const GirlsLeatherShoes = () => {
       }
 
       try {
-        const response = await axios.get("/ims/products/Girls-Leather-Shoes", {
+        const response = await axios.get(`${BASE_URL}/ims/products/Girls-Leather-Shoes`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";  
 import "./AddSizeModal.css";  
 
+const BASE_URL = "https://ims-wc58.onrender.com";
+
 const AddSizeModal = ({ productName, productDescription, unitPrice, category, onClose, onSave }) => {  
   const [formData, setFormData] = useState({  
     size: '',  
@@ -75,7 +77,7 @@ const AddSizeModal = ({ productName, productDescription, unitPrice, category, on
       const token = localStorage.getItem("access_token");  
 
       // Make POST request to the backend with the token in headers  
-      const response = await axios.post("/ims/products/add-size", payload, {  
+      const response = await axios.post(`${BASE_URL}/ims/products/add-size`, payload, {  
         headers: {  
           Authorization: `Bearer ${token}`, // Add the access token here  
         },  

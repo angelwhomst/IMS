@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./AddProductForm.css";
 
+const BASE_URL = "https://ims-wc58.onrender.com";
+
 const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     productName: "",
@@ -88,7 +90,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
     try {
       const token = localStorage.getItem("access_token");
       const response = await axios.post(
-        "/ims/products",
+        `${BASE_URL}/ims/products`,
         payload,
         {
           headers: {

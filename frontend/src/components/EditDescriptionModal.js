@@ -3,6 +3,9 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import "./EditDescriptionModal.css";
 
+const BASE_URL = "https://ims-wc58.onrender.com";
+
+
 const EditDescriptionModal = ({
   product = {},
   productName,
@@ -91,7 +94,7 @@ const EditDescriptionModal = ({
         throw new Error("Unauthorized: No access token found.");
       }
 
-      const response = await axios.put(`/ims/products/update-details`, updatedProduct, {
+      const response = await axios.put(`${BASE_URL}/ims/products/update-details`, updatedProduct, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

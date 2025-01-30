@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";  
 import "./EditSizeModal.css";  
 
+
+const BASE_URL = "https://ims-wc58.onrender.com";
+
 const EditSizeModal = ({ selectedSize, productName, productDescription, unitPrice, category, onClose, onSave }) => {  
   const [formData, setFormData] = useState({  
     size: '',  
@@ -71,7 +74,7 @@ const EditSizeModal = ({ selectedSize, productName, productDescription, unitPric
       const token = localStorage.getItem("access_token");  
 
       // Send a PUT request to the backend API with the token in headers  
-      const response = await axios.post("/ims/products/update", payload, {  
+      const response = await axios.post(`${BASE_URL}/ims/products/update`, payload, {  
         headers: {  
           Authorization: `Bearer ${token}`, // Add the access token here  
         },  

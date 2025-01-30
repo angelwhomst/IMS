@@ -14,7 +14,7 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
     reorder: "",
     maxStockLevel: "",
     minStockLevel: "",
-    image: null,
+    image_path: null,
   });
 
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -40,20 +40,19 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
 
     if (file && file.type.startsWith("image/")) {
       if (file.size > MAX_FILE_SIZE) {
-        alert("File size exceeds the 2MB limit.");
+        alert("File size exceeds the 5MB limit.");
         return;
       }
 
       const reader = new FileReader();
-      reader.onload = () => {
-        setFormData((prev) => ({ ...prev, image: reader.result }));
+      reader.onloadend = () => {
+        // Here, the Base64 string is stored in `image_path`
+        setFormData((prevState) => ({ ...prevState, image_path: reader.result }));
+        console.log("Image successfully uploaded:", reader.result); // Debugging line
       };
-      reader.onerror = () => {
-        alert("Error reading the file.");
-      };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); // Converts the file to a Base64 string
     } else {
-      alert("Please upload a valid image file.");
+      console.error("Invalid file type or no file selected."); // Debugging line
     }
   };
 
@@ -81,13 +80,15 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
       reorderLevel: parseInt(formData.reorder, 10), // Convert to integer
       maxStockLevel: parseInt(formData.maxStockLevel, 10), // Convert to integer
       minStockLevel: parseInt(formData.minStockLevel, 10), // Convert to integer
-      image: formData.image, // Base64 string
+      image: formData.image_path, // Base64 string
     };
+
+    console.log("Payload being sent:", payload); // Debugging line
 
     try {
       const token = localStorage.getItem("access_token");
       const response = await axios.post(
-        "https://ims-wc58.onrender.com/ims/products",
+        "/ims/products",
         payload,
         {
           headers: {
@@ -96,10 +97,15 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
           },
         }
       );
-      alert("Product added successfully");
-      onSubmit();
+
+      // Alert after successful product addition
+      console.log("Product added successfully:", response.data); // Debugging line
+      onSubmit(); // Optional callback for further actions
+      setTimeout(() => {
+        onClose(); // Automatically close the modal after 2 seconds
+      }, 2000); // 2 seconds delay before closing
     } catch (error) {
-      console.error("Error adding product:", error.response || error);
+      console.error("Error adding product:", error.response || error); // Debugging line
     }
   };
 
@@ -119,9 +125,9 @@ const AddProductForm = ({ isOpen, onClose, onSubmit }) => {
           <div className="addproduct-image-upload">
             <input type="file" accept="image/*" onChange={handleFileChange} />
             <div className="addproduct-image-placeholder">
-              {formData.image ? (
+              {formData.image_path ? (
                 <img
-                  src={formData.image}
+                  src={formData.image_path || 'default_image.jpg'}
                   alt="Product"
                   style={{ width: "100px", height: "100px", objectFit: "cover" }}
                 />

@@ -1,113 +1,131 @@
-import React, { useState, useEffect } from "react";  
-import PropTypes from "prop-types";  
-import axios from "axios";  
-import "./EditDescriptionModal.css";  
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import axios from "axios";
+import "./EditDescriptionModal.css";
 
-const EditDescriptionModal = ({  
-  product = {},  
-  productName,  
-  productDescription,  
-  unitPrice,  
-  category,  
-  onClose,  
-  onSave,  
-}) => {  
-  const [editedProduct, setEditedProduct] = useState({  
-    productName: product.productName || productName || "",  
-    productDescription: product.productDescription || productDescription || "",  
-    unitPrice: product.unitPrice || unitPrice || 0,  
-    category: product.category || category || "",  
-    image: product.image_path || "",  
-  });  
+const EditDescriptionModal = ({
+  product = {},
+  productName,
+  productDescription,
+  unitPrice,
+  category,
+  onClose,
+  onSave,
+}) => {
+  const [editedProduct, setEditedProduct] = useState({
+    newProductName: "",
+    newProductDescription: "",
+    newUnitPrice: 0,
+    newCategory: "",
+    newImage: "",
+  });
 
-  useEffect(() => {  
-    console.log("Category received in useEffect:", category);  
-    console.log("Product category:", product.category);  
-  
-    setEditedProduct({  
-      productName: product.productName || productName || "",  
-      productDescription: product.productDescription || productDescription || "",  
-      unitPrice: product.unitPrice || unitPrice || 0,  
-      category: product.category || category || "",  
-      image: product.image_path || "",  
-    });  
-  }, [product, productName, productDescription, unitPrice, category]);  
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleInputChange = (e) => {  
-    const { name, value } = e.target;  
-    setEditedProduct((prevState) => ({  
-      ...prevState,  
-      [name]: value,  
-    }));  
-  };  
+  useEffect(() => {
+    setEditedProduct({
+      newProductName: product.productName || productName || "",
+      newProductDescription: product.productDescription || productDescription || "",
+      newUnitPrice: product.unitPrice || unitPrice || 0,
+      newCategory: product.category || category || "",
+      newImage: product.image_path || "",
+    });
+  }, [product, productName, productDescription, unitPrice, category]);
 
-  const handleFileChange = (e) => {  
-    const file = e.target.files[0];  
-    if (file) {  
-      const reader = new FileReader();  
-      reader.onloadend = () => {  
-        setEditedProduct((prevState) => ({  
-          ...prevState,  
-          image: reader.result,  
-        }));  
-      };  
-      reader.readAsDataURL(file);  
-    }  
-  };  
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
 
-  const handleSave = async () => {  
-    console.log("onSave prop:", onSave); // Debugging  
+    setEditedProduct((prevState) => ({
+      ...prevState,
+      [name]: name === "newUnitPrice" ? parseFloat(value) || 0 : value,
+    }));
 
-    if (typeof onSave !== "function") {  
-      console.error("Error: onSave is not a function");  
-      alert("An error occurred: onSave is not a function.");  
-      return;  
-    }  
+    console.log("Updated product input:", { name, value });
+  };
 
-    if (  
-      !editedProduct.productName ||  
-      !editedProduct.productDescription ||  
-      !editedProduct.unitPrice ||  
-      !editedProduct.category  
-    ) {  
-      alert("Please fill out all fields.");  
-      return;  
-    }  
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditedProduct((prevState) => ({
+          ...prevState,
+          newImage: reader.result,
+        }));
+        console.log("Image uploaded:", reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-    const updatedProduct = {  
-      productName: product.productName,  
-      productDescription: product.productDescription,  
-      category: category,  
-      unitPrice: product.unitPrice,  
-      newProductName: editedProduct.productName.trim(),  
-      newProductDescription: editedProduct.productDescription.trim(),  
-      newCategory: editedProduct.category.trim(),  
-      newUnitPrice: parseFloat(editedProduct.unitPrice),  
-      newImage: editedProduct.image,  
-    };  
+  const handleSave = async () => {
+    console.log("Save button clicked");
 
-    console.log("Payload:", updatedProduct);  
+    const updatedProduct = {
+      productName: product.productName,
+      productDescription: product.productDescription,
+      category: product.category,
+      unitPrice: product.unitPrice,
+      newProductName: editedProduct.newProductName || product.productName,
+      newProductDescription: editedProduct.newProductDescription || product.productDescription,
+      newCategory: editedProduct.newCategory || product.category,
+      newUnitPrice: parseFloat(editedProduct.newUnitPrice).toFixed(2) || product.unitPrice,
+      newImage: editedProduct.newImage || product.image_path,
+    };
 
-    try {  
-      const token = localStorage.getItem("access_token");  
-      if (!token) {  
-        throw new Error("Unauthorized: No access token found.");  
-      }  
+    console.log("Sending updated product to parent:", updatedProduct);
 
-      const response = await axios.put(`/ims/products/update-details`, updatedProduct, {  
-        headers: {  
-          "Content-Type": "application/json",  
-          Authorization: `Bearer ${token}`, // Add the access token here  
-        },  
-      });  
-      console.log("Server Response:", response.data);  
-      onSave(updatedProduct);  
-      onClose();  
-    } catch (error) {  
-      console.error("Error updating product:", error);  
-      alert("An error occurred while updating the product.");  
-    }  
-  };  
+    if (
+      !updatedProduct.newProductName ||
+      !updatedProduct.newProductDescription ||
+      !updatedProduct.newUnitPrice ||
+      !updatedProduct.newCategory
+    ) {
+      alert("Please fill out all fields.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("Unauthorized: No access token found.");
+      }
+
+      const response = await axios.put(`/ims/products/update-details`, updatedProduct, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("API response:", response);
+
+      if (response.data.error) {
+        setErrorMessage(response.data.error); // Show validation error message
+        return;
+      }
+
+      if (onSave && typeof onSave === "function") {
+        onSave(updatedProduct);
+      }
+      onClose();
+    } catch (error) {
+      if (error.response) {
+        console.error("Error details:", error.response.data);
+        if (error.response.status === 422) {
+          alert(`Validation Error: ${error.response.data.message || "Please check the fields."}`);
+        } else if (error.response.status === 401) {
+          alert("Unauthorized: Please log in again.");
+          window.location.href = "/login";
+        } else {
+          alert("An error occurred while updating the product.");
+        }
+      } else {
+        console.error("Error during product update:", error);
+        alert("An unexpected error occurred.");
+      }
+    }
+  };
 
   return (
     <div className="edit-description-modal-overlay">
@@ -117,15 +135,12 @@ const EditDescriptionModal = ({
         </button>
         <h2>Edit Product</h2>
         <div className="edit-description-form">
+          {errorMessage && <div className="error-message">{errorMessage}</div>} {/* Display error message */}
           <label>
             Image:
             <div className="image-upload-container">
-              {editedProduct.image && (
-                <img
-                  src={editedProduct.image}
-                  alt="Product"
-                  className="edit-product-image"
-                />
+              {editedProduct.newImage && (
+                <img src={editedProduct.newImage} alt="Product" className="edit-product-image" />
               )}
               <input type="file" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -134,16 +149,16 @@ const EditDescriptionModal = ({
             Product Name:
             <input
               type="text"
-              name="productName"
-              value={editedProduct.productName}
+              name="newProductName"
+              value={editedProduct.newProductName}
               onChange={handleInputChange}
             />
           </label>
           <label>
             Description:
             <textarea
-              name="productDescription"
-              value={editedProduct.productDescription}
+              name="newProductDescription"
+              value={editedProduct.newProductDescription}
               onChange={handleInputChange}
             />
           </label>
@@ -151,8 +166,8 @@ const EditDescriptionModal = ({
             Price:
             <input
               type="number"
-              name="unitPrice"
-              value={editedProduct.unitPrice}
+              name="newUnitPrice"
+              value={editedProduct.newUnitPrice}
               onChange={handleInputChange}
             />
           </label>
@@ -160,8 +175,8 @@ const EditDescriptionModal = ({
             Category:
             <input
               type="text"
-              name="category"
-              value={editedProduct.category}
+              name="newCategory"
+              value={editedProduct.newCategory}
               onChange={handleInputChange}
             />
           </label>
@@ -172,7 +187,6 @@ const EditDescriptionModal = ({
   );
 };
 
-// Define PropTypes for type checking
 EditDescriptionModal.propTypes = {
   product: PropTypes.object,
   productName: PropTypes.string,
@@ -180,7 +194,7 @@ EditDescriptionModal.propTypes = {
   unitPrice: PropTypes.number,
   category: PropTypes.string,
   onClose: PropTypes.func.isRequired,
-  onSave: PropTypes.func.isRequired, // Ensure onSave is a function
+  onSave: PropTypes.func.isRequired,
 };
 
 export default EditDescriptionModal;

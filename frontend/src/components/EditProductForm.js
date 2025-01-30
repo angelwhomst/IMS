@@ -1,107 +1,142 @@
-import React, { useState, useEffect } from 'react';  
-import axios from 'axios'; // Import Axios  
-import './EditProductForm.css';  
-import EditSizeModal from './EditSizeModal';  
-import AddSizeModal from './AddSizeModal'; // Import the AddSizeModal component  
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Import Axios
+import './EditProductForm.css';
+import EditSizeModal from './EditSizeModal';
+import AddSizeModal from './AddSizeModal'; // Import the AddSizeModal component
 
-const EditProductForm = ({ product, category, onClose }) => {  
-  const [productData, setProductData] = useState(product);  
-  const [size, setSize] = useState([]);  
-  const [sizeVariants, setSizeVariants] = useState([]);  
-  const [selectedSizeDetails, setSelectedSizeDetails] = useState(null);  
-  const [isEditModalOpen, setEditModalOpen] = useState(false);  
-  const [isAddSizeModalOpen, setAddSizeModalOpen] = useState(false); // Add state for AddSizeModal visibility  
-  const [error, setError] = useState(null);  
+const EditProductForm = ({ product, category, onClose }) => {
+  const [productData, setProductData] = useState(product);
+  const [size, setSize] = useState([]);
+  const [sizeVariants, setSizeVariants] = useState([]);
+  const [selectedSizeDetails, setSelectedSizeDetails] = useState(null);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isAddSizeModalOpen, setAddSizeModalOpen] = useState(false); // Add state for AddSizeModal visibility
+  const [error, setError] = useState(null);
 
-  // Fetch sizes  
-  useEffect(() => {  
-    if (productData) {  
-      const fetchSize = async () => {  
-        try {  
-          const categoryParam = category || 'Uncategorized';  
-          const url = `https://ims-wc58.onrender.com/ims/products/sizes?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;  
-          
-          const token = localStorage.getItem("access_token"); // Retrieve the token  
+  // Fetch sizes
+  const fetchSize = async () => {
+    try {
+      const categoryParam = category || 'Uncategorized';
+      const url = `https://ims-wc58.onrender.com/ims/products/sizes?productName=${productData.productName}&unitPrice=${productData.unitPrice}&productDescription=${productData.productDescription}&category=${categoryParam}`;
 
-          const response = await axios.get(url, {  
-            headers: {  
-              Authorization: `Bearer ${token}`, // Use the token in the request header  
-            },  
-          });  
+      const token = localStorage.getItem("access_token"); // Retrieve the token
 
-          if (response.status === 200 && Array.isArray(response.data.size)) {  
-            setSize(response.data.size);  
-          } else {  
-            setSize([]);  
-            setError("Invalid size data received.");  
-          }  
-        } catch (error) {  
-          setSize([]);  
-          setError("An error occurred while fetching product size.");  
-          console.error("Error fetching sizes:", error); // Debug log  
-        }  
-      };  
-      fetchSize();  
-    }  
-  }, [productData, category]);  
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Use the token in the request header
+        },
+      });
 
-  // Fetch size variants  
-  useEffect(() => {  
-    if (productData) {  
-      const fetchSizeVariants = async () => {  
-        try {  
-          const token = localStorage.getItem("access_token"); // Retrieve the token  
-          const response = await axios.get(  
-            `/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&unitPrice=${productData.unitPrice}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`,  
-            {  
-              headers: {  
-                Authorization: `Bearer ${token}`, // Use the token in the request header  
-              },  
-            }  
-          );  
+      if (response.status === 200 && Array.isArray(response.data.size)) {
+        setSize(response.data.size);
+      } else {
+        setSize([]);
+        setError("Invalid size data received.");
+      }
+    } catch (error) {
+      setSize([]);
+      setError("An error occurred while fetching product size.");
+      console.error("Error fetching sizes:", error); // Debug log
+    }
+  };
 
-          if (response.status === 200 && Array.isArray(response.data)) {  
-            setSizeVariants(response.data);  
-          } else {  
-            setSizeVariants([]);  
-          }  
-        } catch (error) {  
-          setSizeVariants([]);  
-          console.error("Error fetching size variants:", error); // Debug log  
-        }  
-      };  
-      fetchSizeVariants();  
-    }  
-  }, [productData, category]);  
+  // Fetch size variants
+  const fetchSizeVariants = async () => {
+    try {
+      const token = localStorage.getItem("access_token"); // Retrieve the token
+      const response = await axios.get(
+        `https://ims-wc58.onrender.com/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&unitPrice=${productData.unitPrice}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Use the token in the request header
+          },
+        }
+      );
 
-  const handleSizeClick = (selectedSize) => {  
-    setProductData((prevData) => ({  
-      ...prevData,  
-      selectedSize,  
-    }));  
+      if (response.status === 200 && Array.isArray(response.data)) {
+        setSizeVariants(response.data);
+      } else {
+        setSizeVariants([]);
+      }
+    } catch (error) {
+      setSizeVariants([]);
+      console.error("Error fetching size variants:", error); // Debug log
+    }
+  };
 
-    const sizeDetails = size.find((item) => item.size === selectedSize.size);  
-    setSelectedSizeDetails(sizeDetails || null);  
-  };  
+  useEffect(() => {
+    if (productData) {
+      fetchSize();
+      fetchSizeVariants();
+    }
+  }, [productData, category]);
 
-  const handleDeleteSize = (sizeToDelete) => {  
-    const updatedSize = size.filter((sizeItem) => sizeItem.size !== sizeToDelete.size);  
-    setSize(updatedSize);  
-    setSelectedSizeDetails(null); // Clear selected size details  
-  };  
+  const handleSizeClick = (selectedSize) => {
+    setProductData((prevData) => ({
+      ...prevData,
+      selectedSize,
+    }));
 
-  const handleSaveSize = (updatedSizeDetails) => {  
-    const updatedSize = size.map((sizeItem) =>  
-      sizeItem.size === selectedSizeDetails.size ? { ...sizeItem, ...updatedSizeDetails } : sizeItem  
-    );  
-    setSize(updatedSize);  
-    setSelectedSizeDetails(updatedSizeDetails);  
-  };  
+    const sizeDetails = size.find((item) => item.size === selectedSize.size);
+    setSelectedSizeDetails(sizeDetails || null);
+  };
 
-  const handleAddSize = () => {  
-    console.log("Opening Add Size Modal"); // Debug log for opening Add Size modal  
-    setAddSizeModalOpen(true); // Open AddSizeModal  
-  };  
+  const handleDeleteSize = async (sizeToDelete) => {
+    if (!sizeToDelete) {
+      console.error("No size selected to delete");
+      return;
+    }
+
+    const token = localStorage.getItem("access_token"); // Retrieve the token
+
+    try {
+      const response = await axios.patch(
+        "https://ims-wc58.onrender.com/ims/products/sizes/soft-delete",
+        null, // No request body since we're sending parameters in the query
+        {
+          params: {
+            productName: productData.productName,
+            unitPrice: productData.unitPrice,
+            category: category,
+            size: sizeToDelete.size,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`, // Use the token in the request header
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Remove the deleted size from the local state
+        const updatedSize = size.filter((sizeItem) => sizeItem.size !== sizeToDelete.size);
+        setSize(updatedSize);
+        setSelectedSizeDetails(null); // Clear selected size details
+        console.log("Size deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting size:", error);
+      setError("Failed to delete size. Please try again.");
+    }
+  };
+
+  const handleSaveSize = (updatedSizeDetails) => {
+    const updatedSize = size.map((sizeItem) =>
+      sizeItem.size === selectedSizeDetails.size ? { ...sizeItem, ...updatedSizeDetails } : sizeItem
+    );
+    setSize(updatedSize);
+    setSelectedSizeDetails(updatedSizeDetails); // Ensure the selected size details are updated
+
+    // If needed, update productData with the new size details
+    setProductData((prevData) => ({
+      ...prevData,
+      size: updatedSize, // Update productData's size if it should be reflected here
+    }));
+  };
+
+  const handleAddSize = () => {
+    console.log("Opening Add Size Modal"); // Debug log for opening Add Size modal
+    setAddSizeModalOpen(true); // Open AddSizeModal
+  };
 
   return (
     <div className="edit-product-form">
@@ -194,7 +229,10 @@ const EditProductForm = ({ product, category, onClose }) => {
           productDescription={productData.productDescription}
           unitPrice={productData.unitPrice}
           category={category}
-          onClose={() => setEditModalOpen(false)}
+          onClose={() => {
+            setEditModalOpen(false);
+            fetchSize(); // Refresh sizes after closing the EditSizeModal
+          }}
           onSave={handleSaveSize}
         />
       )}
@@ -214,8 +252,8 @@ const EditProductForm = ({ product, category, onClose }) => {
           productName={productData.productName}
           productDescription={productData.productDescription}
           unitPrice={productData.unitPrice}
-          category="Men's Leather Shoes"  
-          image_path
+          category={category}
+          image_path={productData.image_path}
         />
       )}
     </div>

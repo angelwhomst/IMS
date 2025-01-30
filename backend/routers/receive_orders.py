@@ -366,37 +366,15 @@ async def mark_order_received(order: OrderID):
         conn = await database.get_db_connection()
         cursor = await conn.cursor()
 
-        # check if order exists and is marked as Delivered
+        # execute the stored proc
         await cursor.execute(
-            '''
-            SELECT orderStatus 
-            FROM purchaseOrders
-            WHERE orderID = ?
-            ''',
+            '''exec sp_mark_order_received ?''',
             (order_id,)
-        )
-        order_status_row = await cursor.fetchone()
-
-        if not order_status_row:
-            raise HTTPException(status_code=404, detail="Order not found.")
-        
-        order_status = order_status_row[0]
-        if order_status != 'Delivered':
-            raise HTTPException(status_code=400, detail="Order is not marked as Delivered. Current status: {order_status}")
-        
-        # update order status to Received in IMs
-        logging.info(f"Marking order {order_id} as Received orderID: {order_id}")
-        await cursor.execute(
-            """update purchaseOrders
-            set orderStatus = 'Received',
-            statusDate = GETDATE()
-            where orderID = ?
-            """, (order_id,)
         )
         await conn.commit()
 
         # send update to vms
-        vms_url = "http://127.0.0.1:8001/orders/vms/orders/update-status"
+        vms_url = "https://vms-production.up.railway.app/vms/orders/update-status"
         vms_payload = {"orderID": order_id, "orderStatus": "Received"}
 
         # call helper function to send data to vms with retries 

@@ -1,18 +1,41 @@
-import React, { useState } from "react";  
+import React, { useState, useEffect } from "react";  
 import axios from "axios";  
 import "./EditSizeModal.css";  
 
 const EditSizeModal = ({ selectedSize, productName, productDescription, unitPrice, category, onClose, onSave }) => {  
   const [formData, setFormData] = useState({  
-    size: selectedSize.size,  
-    threshold: selectedSize.threshold,  
-    reorderLevel: selectedSize.reorderQuantity,  
-    maxQuantity: selectedSize.maxQuantity,  
-    minQuantity: selectedSize.minQuantity,  
+    size: '',  
+    threshold: '',  
+    reorderLevel: '',  
+    maxQuantity: '',  
+    minQuantity: '',  
+    newSize: '',  
+    newminStockLevel: '',  
+    newmaxStockLevel: '',  
+    newreorderLevel: '',  
+    newthreshold: '',  
   });  
 
   const [loading, setLoading] = useState(false);  
   const [error, setError] = useState(null);  
+
+  // Update formData whenever selectedSize prop changes
+  useEffect(() => {
+    if (selectedSize) {
+      setFormData({  
+        size: selectedSize.size,  
+        threshold: selectedSize.threshold,  
+        reorderLevel: selectedSize.reorderQuantity,  
+        maxQuantity: selectedSize.maxQuantity,  
+        minQuantity: selectedSize.minQuantity,  
+        newSize: selectedSize.size,  
+        newminStockLevel: selectedSize.minQuantity,  
+        newmaxStockLevel: selectedSize.maxQuantity,  
+        newreorderLevel: selectedSize.reorderQuantity,  
+        newthreshold: selectedSize.threshold,  
+      });
+    }
+  }, [selectedSize]); // Dependency array ensures this only runs when selectedSize changes
 
   const handleChange = (e) => {  
     const { name, value } = e.target;  
@@ -31,25 +54,31 @@ const EditSizeModal = ({ selectedSize, productName, productDescription, unitPric
         size: selectedSize.size,  
         category,  
         unitPrice,  
-        newSize: formData.size,  
         minStockLevel: parseInt(formData.minQuantity),  
         maxStockLevel: parseInt(formData.maxQuantity),  
         reorderLevel: parseInt(formData.reorderLevel),  
         threshold: parseInt(formData.threshold),  
+        newSize: formData.newSize,  
+        newminStockLevel: parseInt(formData.newminStockLevel),  
+        newmaxStockLevel: parseInt(formData.newmaxStockLevel),  
+        newreorderLevel: parseInt(formData.newreorderLevel),  
+        newthreshold: parseInt(formData.newthreshold),  
       };  
+
+      console.log("Sending data:", payload);
 
       // Retrieve the access token  
       const token = localStorage.getItem("access_token");  
 
       // Send a PUT request to the backend API with the token in headers  
-      const response = await axios.put("/ims/products/update", payload, {  
+      const response = await axios.post("/ims/products/update", payload, {  
         headers: {  
           Authorization: `Bearer ${token}`, // Add the access token here  
         },  
       });  
 
       // Handle successful update  
-      console.log(response.data.message);  
+      console.log("Response data:", response.data.message);  
       onSave(formData); // Update parent state if needed  
       onClose();  
     } catch (err) {  
@@ -73,8 +102,8 @@ const EditSizeModal = ({ selectedSize, productName, productDescription, unitPric
             <label>Size</label>
             <input
               type="text"
-              name="size"
-              value={formData.size}
+              name="newSize"
+              value={formData.newSize}
               onChange={handleChange}
             />
           </div>
@@ -83,8 +112,8 @@ const EditSizeModal = ({ selectedSize, productName, productDescription, unitPric
             <label>Threshold</label>
             <input
               type="number"
-              name="threshold"
-              value={formData.threshold}
+              name="newthreshold"
+              value={formData.newthreshold}
               onChange={handleChange}
             />
           </div>
@@ -93,8 +122,8 @@ const EditSizeModal = ({ selectedSize, productName, productDescription, unitPric
             <label>Reorder Level</label>
             <input
               type="number"
-              name="reorderLevel"
-              value={formData.reorderLevel}
+              name="newreorderLevel"
+              value={formData.newreorderLevel}
               onChange={handleChange}
             />
           </div>
@@ -103,8 +132,8 @@ const EditSizeModal = ({ selectedSize, productName, productDescription, unitPric
             <label>Maximum Quantity</label>
             <input
               type="number"
-              name="maxQuantity"
-              value={formData.maxQuantity}
+              name="newmaxStockLevel"
+              value={formData.newmaxStockLevel}
               onChange={handleChange}
             />
           </div>
@@ -113,8 +142,8 @@ const EditSizeModal = ({ selectedSize, productName, productDescription, unitPric
             <label>Minimum Stock Level</label>
             <input
               type="number"
-              name="minQuantity"
-              value={formData.minQuantity}
+              name="newminStockLevel"
+              value={formData.newminStockLevel}
               onChange={handleChange}
             />
           </div>

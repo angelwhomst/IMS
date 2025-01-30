@@ -13,7 +13,7 @@ from routers.auth import role_required, get_current_active_user
 router = APIRouter(dependencies=[Depends(role_required(["admin"]))])
 
 # base url for vms api
-VMS_BASE_URL = 'http://127.0.0.1:8001/'
+VMS_BASE_URL = 'https://vms-production.up.railway.app/'
 
 # pydantic model for purchase order
 class PurchaseOrder(BaseModel):
@@ -35,7 +35,7 @@ async def send_order_to_vms(payload: dict):
     async with httpx.AsyncClient() as client:  
         try:   
             logging.info(f"Sending Order Data to VMS: {payload}")
-            response = await client.post("http://127.0.0.1:8001/vms/orders", json=payload)  
+            response = await client.post("https://vms-production.up.railway.app/vms/orders", json=payload)  
             response.raise_for_status()
             logging.info(f"VMS Response: {response.status_code} - {response.json()}")  
             return response.json()  
@@ -222,7 +222,7 @@ async def create_purchase_order(payload: dict):
 
         # execute stored procedure 
         await cursor.execute(
-            "EXEC CreatePurchaseOrder ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?",
+            "EXEC sp_CreatePurchaseOrder ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?",
             (productName, size, category, quantity, warehouseName, building, street, barangay, city, country, zipcode, userID)
         )
         order = await cursor.fetchone()
@@ -235,19 +235,7 @@ async def create_purchase_order(payload: dict):
         await conn.commit()
         # fetch order details for VMS
         await cursor.execute('''
-            SELECT po.orderDate, v.vendorID, v.vendorName, 
-                   w.warehouseID, w.warehouseName, w.building, w.street, 
-                   w.barangay, w.city, w.country, w.zipcode, 
-                    p.productName, p.productDescription, p.size, p.color, p.category,
-                   pod.orderQuantity, pod.expectedDate, u.userID, u.firstName, u.lastName
-            FROM PurchaseOrders po
-            JOIN Vendors v ON po.vendorID = v.vendorID
-            JOIN PurchaseOrderDetails pod ON po.orderID = pod.orderID
-            JOIN Warehouses w ON pod.warehouseID = w.warehouseID
-            JOIN ProductVariants pv ON pod.variantID = pv.variantID
-            JOIN Products p ON pv.productID = p.productID
-            JOIN Users u ON po.userID = u.userID
-            WHERE po.orderID = ?;
+            exec sp_get_order_details ?
         ''', (orderID,))
 
         order_details = await cursor.fetchone()
@@ -309,7 +297,7 @@ async def get_purchase_orders():
         conn = await database.get_db_connection()
         cursor = await conn.cursor()
         await cursor.execute(
-            ''''''
+            '''sp_get_all_PO'''
         )
         rows = await cursor.fetchall()
 
@@ -324,24 +312,6 @@ async def get_purchase_orders():
         raise HTTPException(status_code=500, detail=f"error fetching purchase orders: {e}")
     finally:
         await conn.close()
-
-
-@router.get('product-names')
-async def get_product_names():
-    try:
-        conn = await database.get_db_connection()
-        cursor = await conn.cursor()
-        await cursor.execute(
-            '''SELECT distinct productName FROM Products WHERE isActive = 1;'''
-        )
-        rows = await cursor.fetchall()
-
-        return [row[0] for row in rows]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"error fetching product names: {e}")
-    finally:
-        await conn.close()
-
 
 @router.get("/get-product-details/{product_name}")
 async def get_product_details(product_name: str):

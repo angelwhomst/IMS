@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import "./GirlsLeatherShoes.css"; // Create separate styles for Girl'sLeatherShoes
+import "./GirlsLeatherShoes.css";
+import axios from "axios";
 import AddProductForm from "./AddProductForm";
-import EditProductForm from "./EditProductForm"; 
+import EditProductForm from "./EditProductForm";
+import EditDescriptionModal from "./EditDescriptionModal";
 
 const GirlsLeatherShoes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -9,47 +11,165 @@ const GirlsLeatherShoes = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [productToEdit, setProductToEdit] = useState(null);
-  const [error, setError] = useState(null); // State for error handling
+  const [error, setError] = useState(null);
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);
 
-  const openModal = () => setIsModalOpen(true);
+  const openModal = () => {
+    console.log("Opening Add Product Modal");
+    setIsModalOpen(true);
+  };
+
   const closeModal = () => setIsModalOpen(false);
 
   const addProduct = (product) => setProducts([...products, product]);
 
   const openDeleteModal = (product) => {
+    console.log("Opening Delete Modal for Product:", product);
     setProductToDelete(product);
     setIsDeleteModalOpen(true);
   };
+
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setProductToDelete(null);
   };
 
-  const deleteProduct = () => {
-    setProducts(products.filter((p) => p !== productToDelete));
-    closeDeleteModal();
+  const deleteProduct = async () => {
+    if (!productToDelete) return;
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setError("Unauthorized: No access token found.");
+      return;
+    }
+
+    try {
+      const productName = productToDelete.productName;
+      const category = "Girl's Leather Shoes";
+
+      console.log(`Sending request to soft-delete product with the following data: {productName: '${productName}', category: '${category}'}`);
+
+      const response = await axios.patch(
+        `/ims/products/soft-delete?productName=${productName}&category=${category}`, // Send data as query params
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log(response.data);
+
+      // Remove deleted product from state
+      setProducts(products.filter((p) => p.productName !== productName));
+
+      closeDeleteModal();
+    } catch (error) {
+      console.error("Error while deleting product:", error);
+      setError("Could not delete product. Please try again later.");
+    }
   };
 
-  const openEditProduct = (product) => setProductToEdit(product);
-  const closeEditProduct = () => setProductToEdit(null);
+  const openEditDescription = (product) => {
+    console.log("Opening Edit Description Modal for Product:", product);
+    setProductToEdit({ product, category: "Girl's Leather Shoes" });
+    setIsDescriptionModalOpen(true);
+    setIsProductFormOpen(false);
+  };
 
-  // Fetch products from the API when the component mounts
+  const openEditProduct = (product) => {
+    console.log("Opening Edit Product Modal for Product:", product);
+    setProductToEdit({ product, category: "Girl's Leather Shoes" });
+    setIsProductFormOpen(true);
+    setIsDescriptionModalOpen(false);
+  };
+
+  const closeEditProduct = () => {
+    setProductToEdit(null);
+    setIsProductFormOpen(false);
+    refreshProducts();  // Refresh product list after closing the edit modal
+  };
+
+  const closeEditDescription = () => {
+    setProductToEdit(null);
+    setIsDescriptionModalOpen(false);
+    refreshProducts();  // Refresh product list after closing the edit modal
+  };
+
+  const refreshProducts = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setError("Unauthorized: No access token found.");
+      return;
+    }
+
+    try {
+      const response = await axios.get("/ims/products/Girls-Leather-Shoes", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Log the response data to inspect it
+      console.log(response.data);
+
+      // Remove duplicates based on productName, productDescription, and unitPrice
+      const uniqueProducts = response.data.filter((product, index, self) =>
+        index === self.findIndex((p) => (
+          p.productName === product.productName &&
+          p.productDescription === product.productDescription &&
+          p.unitPrice === product.unitPrice
+        ))
+      );
+
+      // Ensure the fetched data is not null or undefined
+      setProducts(uniqueProducts.filter(product => product && product.productName));
+    } catch (error) {
+      console.error(error);
+      setError("Could not fetch products. Please try again later.");
+    }
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setError("Unauthorized: No access token found.");
+        return;
+      }
+
       try {
-        const response = await fetch("/ims/products/Girls-Leather-Shoes");
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-        const data = await response.json();
-        setProducts(data); // Update state with the fetched products
+        const response = await axios.get("/ims/products/Girls-Leather-Shoes", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Log the response data to inspect it
+        console.log(response.data);
+
+        // Remove duplicates based on productName, productDescription, and unitPrice
+        const uniqueProducts = response.data.filter((product, index, self) =>
+          index === self.findIndex((p) => (
+            p.productName === product.productName &&
+            p.productDescription === product.productDescription &&
+            p.unitPrice === product.unitPrice
+          ))
+        );
+
+        // Ensure the fetched data is not null or undefined
+        setProducts(uniqueProducts.filter(product => product && product.productName));
       } catch (error) {
         console.error(error);
         setError("Could not fetch products. Please try again later.");
       }
     };
+
     fetchProducts();
-  }, []); // Empty dependency array ensures this runs once when the component mounts
+  }, []);  // Fetch products when the component mounts
 
   return (
     <div className="girls-catalog-products-container">
@@ -58,54 +178,78 @@ const GirlsLeatherShoes = () => {
         Add Product
       </button>
 
-      {/* AddProductForm Modal */}
       <AddProductForm
         isOpen={isModalOpen}
         onClose={closeModal}
         onSubmit={addProduct}
       />
 
-      {/* Error Handling UI */}
       {error && <div className="error-message">{error}</div>}
 
       <div className="girls-catalog-products-grid">
-        {/* Mapping through products to display in grid */}
-        {products.map((product, index) => (
-          <div key={index} className="girls-catalog-product-card">
-            <img
-              src={product.image_path} // Assuming the API response includes image_path
-              alt={product.productName}
-              onClick={() => openEditProduct(product)} // Open the EditProductForm on click
-            />
-            <div className="girls-catalog-product-info">
-              <h3>{product.productName}</h3>
-              <p>{product.productDescription}</p>
-              <p>Price: ${product.unitPrice}</p> {/* Assuming unitPrice is numeric */}
+        {products.map((product, index) => {
+          if (!product || !product.productName) {
+            // Skip rendering this product if it's undefined or doesn't have a name
+            return null;
+          }
+
+          const imagePath = product?.image_path || '../assets/girls-default.png';
+
+          return (
+            <div key={index} className="girls-catalog-product-card">
+              <img
+                src={imagePath}  // Ensure fallback image if image_path is undefined
+                alt={product.productName}
+                onClick={() => openEditProduct(product)}
+              />
+              <div className="girls-catalog-product-info">
+                <h3>{product.productName}</h3>
+                <p>{product.productDescription}</p>
+                <p>Price: ₱{product.unitPrice}</p>
+              </div>
+
+              <div className="girls-catalog-product-actions">
+                <button
+                  className="girls-catalog-edit-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEditDescription(product);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="girls-catalog-delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDeleteModal(product);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="girls-catalog-product-actions">
-              <button
-                className="girls-catalog-delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent card click
-                  openDeleteModal(product);
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* EditProductForm Modal */}
-      {productToEdit && (
+      {isProductFormOpen && productToEdit && (
         <EditProductForm
-          product={productToEdit} // Pass the product to EditProductForm
-          onClose={closeEditProduct} // Close the form
+          product={productToEdit.product}
+          category={productToEdit.category}
+          onClose={closeEditProduct}
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+      {isDescriptionModalOpen && productToEdit && (
+        <EditDescriptionModal
+          product={productToEdit.product}
+          category={productToEdit.category}
+          image={productToEdit.product.image_path}
+          onClose={closeEditDescription}
+        />
+      )}
+
       {isDeleteModalOpen && (
         <div className="girls-catalog-modal-overlay">
           <div className="girls-catalog-modal-content">

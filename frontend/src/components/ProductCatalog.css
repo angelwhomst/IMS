@@ -5,73 +5,129 @@
     margin-bottom: 20px;
     font-weight: 700;
     color: #f40b37;
-}
-
-.image-grid {
+  }
+  
+  .image-grid {
     display: flex;
-    justify-content: center; /* Centers the grid */
+    justify-content: center;
     margin: 0 auto;
-    width: 100%; /* Ensures the grid takes up full width */
-    padding: 0 15px; /* Adds even padding on left and right */
+    width: 100%;
+    padding: 0 15px;
     gap: 25px;
-    flex-wrap: wrap; /* Allows wrapping of items on smaller screens */
-}
-
-.image-item {
+    flex-wrap: wrap;
+  }
+  
+  .image-item {
     text-align: center;
-    width: 300px; /* Fixed width for consistency */
-    height: 400px; /* Fixed height */
+    width: 300px;
+    height: 400px;
     margin: 0;
     border-radius: 12px;
-    overflow: hidden; /* Prevents any overflow */
-    background-color: white; /* Sets the background color to white */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
-    position: relative; /* Allows the text to be positioned inside */
-}
-
-.image-item:hover {
-    transform: scale(1.05); /* Slight zoom effect */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Stronger shadow on hover */
-}
-
-.image-item img {
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+  }
+  
+  .image-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .image-item img {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Ensures the image fits within the container without stretching or zooming */
-    object-position: center; /* Centers the image */
+    object-fit: contain;
+    object-position: center;
     border-radius: 8px;
-}
-
-.image-text {
+  }
+  
+  .image-text {
     font-family: "Barlow Condensed", sans-serif;
     font-size: 18px;
     margin-top: 15px;
     color: #333;
     white-space: nowrap;
-    text-overflow: ellipsis; /* Prevents overflow of text */
+    text-overflow: ellipsis;
     overflow: hidden;
-    position: absolute; /* Absolute position ensures the text stays inside the image container */
-    bottom: 10px; /* Pushes the text to the bottom of the image */
+    position: absolute;
+    bottom: 10px;
     left: 50%;
-    transform: translateX(-50%); /* Centers the text horizontally */
-    z-index: 1; /* Ensures the text is on top of the image */
-}
-
-.image-link {
+    transform: translateX(-50%);
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+  
+  .image-link {
     text-decoration: none;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
+  }
+  
+  .image-link:hover .image-text {
+    color: #f40b37;
+    font-weight: bold;
+  }
+  
+  /* Add Product Button */
+  .add-product-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    background-color: #f40b37;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s ease;
+  }
+  
+  .add-product-button:hover {
+    background-color: #d00930;
+  }
+  
+  .add-product-button:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+  }
+  
+  /* Add Product Form Modal */
+  .add-product-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    z-index: 1000;
+  }
+  
+  .add-product-modal button {
+    margin-top: 10px;
+    background-color: #f40b37;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
     .image-grid {
-        flex-direction: column; /* Stacks the items vertically */
-        width: 100%; /* Full width */
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
     }
-
+  
     .image-item {
-        width: 100%; /* Makes the image take full width */
-        height: auto; /* Adjusts the height automatically to maintain aspect ratio */
-        margin-left: 0;
+      width: 100%;
+      height: auto;
+      margin-left: 0;
     }
-}
+  }

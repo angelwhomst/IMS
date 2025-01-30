@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 # from routers import inventory, auth, purchase_order, employee_accounts
-from routers import inventory, purchase_order, auth, employee_accounts, receive_orders, sales
+from routers import inventory, purchase_order, auth, employee_accounts, receive_orders, sales, dashboard
 import uvicorn
 import os
 import logging
@@ -36,6 +36,7 @@ app.include_router(purchase_order.router, prefix='/purchase-order', tags=['purch
 app.include_router(employee_accounts.router, prefix='/employees', tags=['employee-accounts'])
 app.include_router(receive_orders.router, prefix='/receive-orders', tags=['receive-orders'])
 app.include_router(sales.router, prefix='/employee-sales', tags=['employee sales'])
+app.include_router(dashboard.router, prefix='/dashboard', tags=['dashboard'])
 
 # health check endpoint
 @app.get("/health", tags=["health"])

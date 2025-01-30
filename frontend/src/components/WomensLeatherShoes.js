@@ -1,80 +1,160 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import "./WomensLeatherShoes.css";
-import AddProductForm from "./AddProductForm";
-import EditProductForm from "./EditProductForm";
+import React, { useState, useEffect } from "react";  
+import "./WomensLeatherShoes.css";  
+import axios from "axios";  
+import AddProductForm from "./AddProductForm";  
+import EditProductForm from "./EditProductForm";  
+import EditDescriptionModal from "./EditDescriptionModal";  
 
-const WomensLeatherShoes = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
-  const [productToEdit, setProductToEdit] = useState(null);
-  const [error, setError] = useState(null);
+const WomensLeatherShoes = () => {  
+  const [isModalOpen, setIsModalOpen] = useState(false);  
+  const [products, setProducts] = useState([]);  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);  
+  const [productToDelete, setProductToDelete] = useState(null);  
+  const [productToEdit, setProductToEdit] = useState(null);  
+  const [error, setError] = useState(null);  
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);  
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);  
 
-  const token = localStorage.getItem("access_token"); // retrieves token
+  const openModal = () => {  
+    console.log("Opening Add Product Modal");
+    setIsModalOpen(true);  
+  };  
 
-  const axiosInstance = axios.create({
-    baseURL: "http://127.0.0.1:8000", 
-    headers: {
-      Authorization: `Bearer ${token}`, // attaches token to every request
-    },
-  });
+  const closeModal = () => setIsModalOpen(false);  
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const addProduct = (product) => setProducts([...products, product]);  
 
-  const addProduct = async (product) => {
-    try {
-      const response = await axiosInstance.post("/ims/products", product);
-      setProducts([...products, response.data]);
-    } catch (error) {
-      console.error("Error adding product:", error);
-      setError("Could not add product. Please try again.");
-    }
-  };
+  const openDeleteModal = (product) => {  
+    console.log("Opening Delete Modal for Product:", product);
+    setProductToDelete(product);  
+    setIsDeleteModalOpen(true);  
+  };  
 
-  const openDeleteModal = (product) => {
-    setProductToDelete(product);
-    setIsDeleteModalOpen(true);
-  };
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setProductToDelete(null);
-  };
+  const closeDeleteModal = () => {  
+    setIsDeleteModalOpen(false);  
+    setProductToDelete(null);  
+  };  
 
   const deleteProduct = async () => {
+    if (!productToDelete) return;
+  
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setError("Unauthorized: No access token found.");
+      return;
+    }
+  
     try {
-      await axiosInstance.delete(`/ims/products/${productToDelete.id}`);
-      setProducts(products.filter((p) => p.id !== productToDelete.id));
+      const productName = productToDelete.productName;
+      const category = "Women's Leather Shoes"; 
+  
+      console.log(`Sending request to soft-delete product with the following data: {productName: '${productName}', category: '${category}'}`);
+  
+      const response = await axios.patch(
+        `/ims/products/soft-delete?productName=${productName}&category=${category}`, 
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      console.log(response.data);
+  
+      setProducts(products.filter((p) => p.productName !== productName));
+  
       closeDeleteModal();
     } catch (error) {
-      console.error("Error deleting product:", error);
-      setError("Could not delete product. Please try again.");
+      console.error("Error while deleting product:", error);
+      setError("Could not delete product. Please try again later.");
     }
   };
 
-  const openEditProduct = (product) => setProductToEdit(product);
-  const closeEditProduct = () => setProductToEdit(null);
+  const openEditDescription = (product) => {  
+    console.log("Opening Edit Description Modal for Product:", product);
+    setProductToEdit({ product, category: "Women's Leather Shoes" });  
+    setIsDescriptionModalOpen(true);  
+    setIsProductFormOpen(false);  
+  };  
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      if (!token) {
-        setError("Unauthorized: No access token found.");
-        return;
-      }
+  const openEditProduct = (product) => {  
+    console.log("Opening Edit Product Modal for Product:", product);
+    setProductToEdit({ product, category: "Women's Leather Shoes" });  
+    setIsProductFormOpen(true);  
+    setIsDescriptionModalOpen(false);  
+  };  
 
-      try {
-        const response = await axiosInstance.get("/ims/products/Womens-Leather-Shoes");
-        setProducts(response.data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setError("Could not fetch products. Please try again later.");
-      }
-    };
+  const closeEditProduct = () => {  
+    setProductToEdit(null);  
+    setIsProductFormOpen(false);
+    fetchProducts();  // Re-fetch the products after closing the edit product modal
+  };  
 
-    fetchProducts();
-  }, []);
+  const closeEditDescription = () => {
+    if (productToEdit) {
+      console.log("Saving edited product data:", productToEdit);
+      handleSaveProduct(productToEdit);  // Save the edited product data
+    }
+  
+    fetchProducts();  // Re-fetch the products after closing the description modal
+  
+    setProductToEdit(null);  // Clear the productToEdit state
+    setIsDescriptionModalOpen(false);  // Close the modal
+  };
+
+  const fetchProducts = async () => {  
+    const token = localStorage.getItem("access_token");  
+    if (!token) {  
+      setError("Unauthorized: No access token found.");  
+      return;  
+    }  
+
+    try {  
+      const response = await axios.get("/ims/products/Womens-Leather-Shoes", {  
+        headers: {  
+          Authorization: `Bearer ${token}`  
+        }  
+      });  
+
+      console.log(response.data);
+
+      // Remove duplicates based on productName, productDescription, and unitPrice  
+      const uniqueProducts = response.data.filter((product, index, self) =>   
+        index === self.findIndex((p) => (  
+          p.productName === product.productName &&  
+          p.productDescription === product.productDescription &&  
+          p.unitPrice === product.unitPrice  
+        ))  
+      );  
+
+      // Ensure the fetched data is not null or undefined
+      setProducts(uniqueProducts.filter(product => product && product.productName));
+    } catch (error) {  
+      console.error(error);  
+      setError("Could not fetch products. Please try again later.");  
+    }  
+  };  
+
+  useEffect(() => {  
+    fetchProducts();  
+  }, []);  
+
+  useEffect(() => {  
+    console.log("Updated products state:", products);
+  }, [products]);
+
+  const handleSaveProduct = (updatedProduct) => {
+    console.log("Received updated product:", updatedProduct);
+    setProducts((prevProducts) => 
+      prevProducts.map((product) => 
+        product.productName === updatedProduct.productName 
+          ? { ...product, ...updatedProduct } 
+          : product
+      )
+    );
+  };
 
   return (
     <div className="womens-catalog-products-container">
@@ -92,37 +172,65 @@ const WomensLeatherShoes = () => {
       {error && <div className="error-message">{error}</div>}
 
       <div className="womens-catalog-products-grid">
-        {products.map((product, index) => (
-          <div key={index} className="womens-catalog-product-card">
-            <img
-              src={product.image_path}
-              alt={product.productName}
-              onClick={() => openEditProduct(product)}
-            />
-            <div className="womens-catalog-product-info">
-              <h3>{product.productName}</h3>
-              <p>{product.productDescription}</p>
-              <p>Price: ${product.unitPrice}</p>
+        {products.map((product, index) => {
+          if (!product || !product.productName) {
+            return null;
+          }
+
+          const imagePath = product?.image_path || '../assets/womens-default.png';
+
+          return (
+            <div key={index} className="womens-catalog-product-card">
+              <img
+                src={imagePath} 
+                alt={product.productName}
+                onClick={() => openEditProduct(product)}
+              />
+              <div className="womens-catalog-product-info">
+                <h3>{product.productName}</h3>
+                <p>{product.productDescription}</p>
+                <p>Price: ₱{product.unitPrice}</p>
+              </div>
+
+              <div className="womens-catalog-product-actions">
+                <button
+                  className="womens-catalog-edit-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEditDescription(product);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="womens-catalog-delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDeleteModal(product);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="womens-catalog-product-actions">
-              <button
-                className="womens-catalog-delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openDeleteModal(product);
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {productToEdit && (
+      {isProductFormOpen && productToEdit && (
         <EditProductForm
-          product={productToEdit}
+          product={productToEdit.product}
+          category={productToEdit.category}
           onClose={closeEditProduct}
+        />
+      )}
+
+      {isDescriptionModalOpen && productToEdit && (
+        <EditDescriptionModal
+          product={productToEdit.product}
+          category={productToEdit.category}
+          image={productToEdit.product.image_path}
+          onClose={closeEditDescription}
         />
       )}
 

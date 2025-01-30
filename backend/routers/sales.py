@@ -115,7 +115,7 @@ async def checkout(request: CheckoutRequest, current_user=Depends(get_current_ac
         # call the CheckoutSale stored procedure
         variant_id_list_str = ",".join(map(str, variant_id_list))
         await cursor.execute(
-            '''exec CheckoutSale @userID = ?, @variantIDList =?''',
+            '''exec sp_CheckoutSale @userID = ?, @variantIDList =?''',
             (current_user.userID, variant_id_list_str)
         )
         await conn.commit()

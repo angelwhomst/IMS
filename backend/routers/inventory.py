@@ -172,7 +172,7 @@ async def add_product(product: Product):
         select @newProductID;''',
             (
                 product.productName,
-                product.productDesc,
+                product.productDescription,
                 product.size,
                 product.color,
                 product.category,

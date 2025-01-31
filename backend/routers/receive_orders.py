@@ -212,7 +212,7 @@ async def fetch_orders(order_status=None):
         if order_status:  
             await cursor.execute(f"exec get_orders_by_status @orderStatus = '{order_status}'")  
         else:  
-            await cursor.execute('exec sp_get_all_orderStatus')  
+            await cursor.execute('exec sp_get_all_orderStatus')   # commentntntnnt
 
         orders_row = await cursor.fetchall()  
         orders_data = [  

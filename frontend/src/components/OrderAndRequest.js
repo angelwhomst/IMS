@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import OrderForm from "./OrderForm"; // Importing OrderForm Component
 import OrderStatus from "./OrderStatus"; // Importing OrderStatus Component
 import ToReceive from "./ToReceive"; // Importing ToReceive Component
-import Returned from "./Returned"; // Importing Returned Component
 import Completed from "./Completed"; // Importing Completed Component
 import "./OrderAndRequest.css"; // Link to CSS file for styling the navigation bar
 
@@ -22,8 +21,6 @@ const OrderAndRequest = () => {
         return <OrderStatus />;
       case "To Receive":
         return <ToReceive />;
-      case "Returned":
-        return <Returned />;
       case "Completed":
         return <Completed />;
       default:
@@ -48,10 +45,7 @@ const OrderAndRequest = () => {
             <i className="fas fa-box-open"></i> {/* To Receive Icon */}
             To Receive
           </li>
-          <li onClick={() => handleOptionClick("Returned")}>
-            <i className="fas fa-undo"></i> {/* Returned Icon */}
-            Returned
-          </li>
+          
           <li onClick={() => handleOptionClick("Completed")}>
             <i className="fas fa-check"></i> {/* Completed Icon */}
             Completed

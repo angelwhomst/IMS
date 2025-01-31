@@ -70,10 +70,9 @@
     font-weight: bold;
   }
   
-  /* Add Product Button */
   .add-product-button {
     display: block;
-    margin: 20px auto;
+    margin: 20px 20px 20px auto; /* Moves button slightly to the right */
     padding: 10px 20px;
     font-size: 18px;
     font-weight: bold;
@@ -83,7 +82,8 @@
     border-radius: 8px;
     cursor: pointer;
     transition: 0.3s ease;
-  }
+}
+
   
   .add-product-button:hover {
     background-color: #d00930;

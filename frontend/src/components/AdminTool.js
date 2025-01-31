@@ -9,8 +9,10 @@ const AdminTool = ({ closeModal }) => {
   const [employeeLastName, setEmployeeLastName] = useState("");
   const [employeeUsername, setEmployeeUsername] = useState("");
   const [employeePassword, setEmployeePassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // New state for confirm password
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); // New state for confirm password visibility
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
   const [authToken, setAuthToken] = useState(localStorage.getItem("authToken")); // Store JWT token
@@ -35,14 +37,19 @@ const AdminTool = ({ closeModal }) => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (employeeFirstName && employeeLastName && employeeUsername && employeePassword) {
+    if (employeeFirstName && employeeLastName && employeeUsername && employeePassword && confirmPassword) {
+      if (employeePassword !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+      }
+
       const newEmployee = {
         firstName: employeeFirstName,
         lastName: employeeLastName,
         username: employeeUsername,
         password: employeePassword,
       };
-      
+
       if (editingEmployeeId) {
         await updateEmployee(editingEmployeeId, newEmployee);
       } else {
@@ -53,6 +60,7 @@ const AdminTool = ({ closeModal }) => {
       setEmployeeLastName("");
       setEmployeeUsername("");
       setEmployeePassword("");
+      setConfirmPassword(""); // Reset confirm password
       setEditingEmployeeId(null); // Reset editing mode
     }
   };
@@ -131,6 +139,10 @@ const AdminTool = ({ closeModal }) => {
     setPasswordVisible(!passwordVisible);
   };
 
+  const toggleConfirmPasswordVisibility = () => {
+    setConfirmPasswordVisible(!confirmPasswordVisible);
+  };
+
   return (
     <div className="admin-modal-overlay">
       <div className="admin-modal-content">
@@ -168,6 +180,17 @@ const AdminTool = ({ closeModal }) => {
               />
               <span className="admin-eye-icon" onClick={togglePasswordVisibility}>
                 {passwordVisible ? <FaEye /> : <FaEyeSlash />}
+              </span>
+            </div>
+            <div className="admin-password-container">
+              <input
+                type={confirmPasswordVisible ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <span className="admin-eye-icon" onClick={toggleConfirmPasswordVisibility}>
+                {confirmPasswordVisible ? <FaEye /> : <FaEyeSlash />}
               </span>
             </div>
             <button type="submit" className="save-changes">

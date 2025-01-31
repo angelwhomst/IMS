@@ -303,8 +303,6 @@ async def get_delivered_orders():
         if conn:
             await conn.close()
 
-# 
-
 #Received
 @router.post("/ims/orders/mark-received")
 async def mark_order_received(order: OrderID):

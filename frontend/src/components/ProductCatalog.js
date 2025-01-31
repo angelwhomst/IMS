@@ -7,12 +7,10 @@ const ProductCatalog = () => {
   const [showAddProductForm, setShowAddProductForm] = useState(false); // State for controlling the form visibility
 
   const handleAddProduct = () => {
-    console.log("Add Product button clicked!"); // Debug log
     setShowAddProductForm(true); // Show the AddProductForm
   };
 
   const closeAddProductForm = () => {
-    console.log("Closing the form..."); // Debug log
     setShowAddProductForm(false); // Close the AddProductForm
   };
 
@@ -30,8 +28,6 @@ const ProductCatalog = () => {
         Add Product
       </button>
 
-      {/* Debug Message for Form Visibility */}
-      {showAddProductForm ? <p>Form should be visible now!</p> : <p>Form is hidden</p>}
 
       {/* Display the AddProductForm when the button is clicked */}
       {showAddProductForm && <AddProductForm closeForm={closeAddProductForm} />}

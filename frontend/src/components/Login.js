@@ -7,10 +7,25 @@ import './Login.css';
 const Login = ({ onLogin, onRoleSelect }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isModalVisible, setIsModalVisible] = useState(false); // State to control modal visibility
   const navigate = useNavigate(); // React Router v6 hook
+
+  // Regex for validating password (min 8 characters, at least one number, one uppercase, and one special character)
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate password
+    if (!passwordRegex.test(password)) {
+      setPasswordError("Password must be at least 8 characters, include one uppercase letter, one number, and one special character.");
+      setIsModalVisible(true); // Show the modal if validation fails
+      return; // Prevent form submission if password is invalid
+    }
+
+    setPasswordError(""); // Clear any previous errors
+    setIsModalVisible(false); // Hide the modal if validation is passed
 
     try {
       const formData = new URLSearchParams();
@@ -56,6 +71,18 @@ const Login = ({ onLogin, onRoleSelect }) => {
     }
   };
 
+  // Modal component
+  const ErrorModal = ({ message, onClose }) => {
+    return (
+      <div className="modal">
+        <div className="modal-content">
+          <span className="close-btn" onClick={onClose}>&times;</span>
+          <p>{message}</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="login-container">
       <div className="blur-bg"></div>
@@ -80,6 +107,9 @@ const Login = ({ onLogin, onRoleSelect }) => {
           Log In
         </button>
       </form>
+
+      {/* Show the modal if password is invalid */}
+      {isModalVisible && <ErrorModal message={passwordError} onClose={() => setIsModalVisible(false)} />}
     </div>
   );
 };

@@ -95,39 +95,62 @@
   }
   
   /* Add Product Form Modal */
+.add-product-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  z-index: 1000;
+  width: 500px; /* Set a fixed width for the modal */
+  max-width: 90%; /* Allow resizing on small screens */
+  height: auto; /* Allow for dynamic height based on content */
+  overflow: visible; /* Ensure modal content is fully visible */
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 100%; /* Full width of the parent modal */
+  max-width: 100%; /* Prevent overflowing */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+/* Add Product Form Button */
+.add-product-modal button {
+  margin-top: 10px;
+  background-color: #f40b37;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
   .add-product-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    padding: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    z-index: 1000;
+    width: 90%; /* Adjust modal width on small screens */
+    height: auto; /* Ensure content fits on mobile */
   }
-  
-  .add-product-modal button {
-    margin-top: 10px;
-    background-color: #f40b37;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  
-  /* Mobile responsiveness */
-  @media (max-width: 768px) {
-    .image-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-    }
-  
-    .image-item {
-      width: 100%;
-      height: auto;
-      margin-left: 0;
-    }
-  }
+}

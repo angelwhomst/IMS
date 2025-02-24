@@ -27,6 +27,48 @@ class OrderID(BaseModel):
     order_id: int
 
 
+# @router.post("/ims/orders/confirm")
+# async def update_order_status(payload: dict):
+#     conn = None
+#     try:
+#         conn = await database.get_db_connection()
+#         cursor = await conn.cursor()
+
+#         orderID = payload.get('orderID')
+#         orderStatus = payload.get('orderStatus')
+
+#         if not orderID or not orderStatus:
+#             raise HTTPException(status_code=400, detail='Missing required fields.')
+        
+#         # check if order exists in the IMS database
+#         await cursor.execute(
+#             '''select * from purchaseOrders
+#               where orderID = ?''',
+#               (orderID,)
+#         )
+#         order_in_db = await cursor.fetchone()
+
+#         if not order_in_db:
+#             raise HTTPException(status_code=404, detail='Order not found in the IMS')
+        
+#         # update the order status in IMS db
+#         await cursor.execute(
+#             ''' update purchaseOrders 
+#             set orderStatus = ?
+#             where orderID = ? ''',
+#             (orderStatus, orderID)
+#         ) 
+#         await conn.commit()
+#         return {'message': 'order status updated', 'orderID': orderID, "status": orderStatus}
+    
+#     except Exception as e:
+#         logging.error(f"error updating order status: {e}")
+#         raise HTTPException(status_code=500, detail=f"error processing order: {e}")
+#     finally: 
+#         if conn:
+#             await conn.close()
+
+
 @router.post("/ims/orders/confirm")
 async def update_order_status(payload: dict):
     conn = None
@@ -39,34 +81,59 @@ async def update_order_status(payload: dict):
 
         if not orderID or not orderStatus:
             raise HTTPException(status_code=400, detail='Missing required fields.')
-        
-        # check if order exists in the IMS database
-        await cursor.execute(
-            '''select * from purchaseOrders
-              where orderID = ?''',
-              (orderID,)
-        )
-        order_in_db = await cursor.fetchone()
 
-        if not order_in_db:
-            raise HTTPException(status_code=404, detail='Order not found in the IMS')
-        
-        # update the order status in IMS db
+        # Fetch order details including products and quantities using the correct table joins
         await cursor.execute(
-            ''' update purchaseOrders 
-            set orderStatus = ?
-            where orderID = ? ''',
+            '''SELECT pv.productID, pod.orderQuantity 
+               FROM PurchaseOrderDetails pod
+               JOIN ProductVariants pv ON pod.variantID = pv.variantID
+               JOIN PurchaseOrders po ON pod.orderID = po.orderID
+               WHERE po.orderID = ?''',
+            (orderID,)
+        )
+        order_details = await cursor.fetchall()
+
+        if not order_details:
+            raise HTTPException(status_code=404, detail='Order details not found in IMS')
+
+        # Validate each product in the order
+        for product in order_details:
+            product_id = product[0]
+            required_quantity = product[1]
+
+            # Check product availability in IMS
+            await cursor.execute(
+                '''SELECT COUNT(*) 
+                   FROM ProductVariants 
+                   WHERE productID = ? AND isAvailable = 1''',
+                (product_id,)
+            )
+            available_count = await cursor.fetchone()
+
+            if available_count[0] < required_quantity:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Insufficient stock for product {product_id}. Required: {required_quantity}, Available: {available_count[0]}"
+                )
+
+        # If validation passes, update the order status
+        await cursor.execute(
+            '''UPDATE PurchaseOrders 
+               SET orderStatus = ? 
+               WHERE orderID = ?''',
             (orderStatus, orderID)
-        ) 
+        )
         await conn.commit()
-        return {'message': 'order status updated', 'orderID': orderID, "status": orderStatus}
-    
+        
+        return {'message': 'Order status updated in IMS', 'orderID': orderID, "status": orderStatus}
+
     except Exception as e:
-        logging.error(f"error updating order status: {e}")
-        raise HTTPException(status_code=500, detail=f"error processing order: {e}")
-    finally: 
+        logging.error(f"Error updating order status: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing order: {e}")
+    finally:
         if conn:
             await conn.close()
+
 
 # ims 
 @router.post('/ims/orders/ToShip')

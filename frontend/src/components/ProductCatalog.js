@@ -7,10 +7,12 @@ const ProductCatalog = () => {
   const [showAddProductForm, setShowAddProductForm] = useState(false); // State for controlling the form visibility
 
   const handleAddProduct = () => {
+    console.log("Add Product button clicked!"); // Debug log
     setShowAddProductForm(true); // Show the AddProductForm
   };
 
   const closeAddProductForm = () => {
+    console.log("Closing the form..."); // Debug log
     setShowAddProductForm(false); // Close the AddProductForm
   };
 
@@ -27,10 +29,6 @@ const ProductCatalog = () => {
       <button className="add-product-button" onClick={handleAddProduct}>
         Add Product
       </button>
-
-
-      {/* Display the AddProductForm when the button is clicked */}
-      {showAddProductForm && <AddProductForm closeForm={closeAddProductForm} />}
 
       {/* Image Grid for Product Links */}
       <div className="image-grid">
@@ -78,6 +76,15 @@ const ProductCatalog = () => {
           </div>
         </Link>
       </div>
+
+      {/* Modal for Add Product Form */}
+      {showAddProductForm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <AddProductForm closeForm={closeAddProductForm} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

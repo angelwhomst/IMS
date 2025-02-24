@@ -45,7 +45,7 @@ const EditProductForm = ({ product, category, onClose }) => {
     try {
       const token = localStorage.getItem("access_token"); // Retrieve the token
       const response = await axios.get(
-        `https://ims-wc58.onrender.com/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&unitPrice=${productData.unitPrice}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`,
+        `https://ims-wc58.onrender.com/ims/products/size_variants?productName=${encodeURIComponent(productData.productName)}&productDescription=${encodeURIComponent(productData.productDescription || '')}&category=${encodeURIComponent(category)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`, // Use the token in the request header

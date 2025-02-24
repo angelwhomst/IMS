@@ -338,14 +338,32 @@ async def get_size(productName: str, category: str, unitPrice: Optional[float] =
         await conn.close()
 
 @router.get('/products/size_variants', response_model=list[ProductVariantResponse])
-async def get_size_variants(productName: str, category: str, unitPrice: Optional[float] = None, productDescription: Optional[str] = None):
+async def get_size_variants(productName: str, category: str, productDescription: Optional[str] = None):
     conn = await database.get_db_connection()
     try:
      async with conn.cursor() as cursor:
 
+        # await cursor.execute(
+        #     '''exec sp_get_variants_per_size ?, ?, ?;  
+        #     ''', (productName, category, productDescription))
+        # variants = await cursor.fetchall()
+
         await cursor.execute(
-            '''exec sp_get_variants_per_size ?, ?, ?;  
-            ''', (productName, category, productDescription))
+            '''SELECT p.size, pv.productCode, pv.barcode
+                FROM
+                    Products AS p
+                INNER JOIN
+                    ProductVariants AS pv
+                ON
+                    p.productID = pv.productID
+                WHERE
+                    p.isActive = 1
+                    AND pv.isAvailable = 1
+                    AND p.productName = ?
+                    AND (p.productDescription = ?)
+                    AND p.category = ?;''',
+                    (productName, category, productDescription)
+        )
         variants = await cursor.fetchall()
 
         if variants:
